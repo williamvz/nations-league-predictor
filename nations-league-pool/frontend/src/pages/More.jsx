@@ -1,8 +1,17 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 
 export default function More() {
   const { user, logout } = useAuth();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    if (user?.is_admin === 1) {
+      api.admin.dashboard().then((d) => setPendingCount(d.pending_users || 0)).catch(() => {});
+    }
+  }, [user]);
 
   const items = [
     { to: '/bonus', icon: '⭐', label: 'Bonusvragen', sub: 'Groepswinnaars, topscorer & meer' },
@@ -10,7 +19,11 @@ export default function More() {
     { to: '/profiel', icon: '👤', label: 'Profiel', sub: 'Avatar, favoriet land, wachtwoord' },
   ];
   if (user?.is_admin === 1) {
-    items.push({ to: '/admin', icon: '🛠️', label: 'Beheer', sub: 'Gebruikers, sync & instellingen' });
+    items.push({
+      to: '/admin', icon: '🛠️', label: 'Beheer',
+      sub: pendingCount > 0 ? `${pendingCount} aanmelding${pendingCount === 1 ? '' : 'en'} wacht op goedkeuring` : 'Gebruikers, sync & instellingen',
+      badge: pendingCount || undefined,
+    });
   }
 
   return (
@@ -21,8 +34,15 @@ export default function More() {
           <Link key={i.to} to={i.to} className="card flex items-center gap-4 p-4 hover:bg-white/[0.04]">
             <span className="text-2xl">{i.icon}</span>
             <span className="flex-1">
-              <span className="block font-bold">{i.label}</span>
-              <span className="text-sm text-emerald-50/50">{i.sub}</span>
+              <span className="block font-bold">
+                {i.label}
+                {i.badge && (
+                  <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-oranje-500 px-1.5 text-xs font-bold text-pitch-950">
+                    {i.badge}
+                  </span>
+                )}
+              </span>
+              <span className={`text-sm ${i.badge ? 'text-oranje-300' : 'text-emerald-50/50'}`}>{i.sub}</span>
             </span>
             <span className="text-emerald-50/30">→</span>
           </Link>

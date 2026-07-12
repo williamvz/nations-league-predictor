@@ -140,6 +140,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   type TEXT NOT NULL,
   title TEXT NOT NULL,
   body TEXT NOT NULL DEFAULT '',
+  meta TEXT,                                 -- JSON payload for actionable notifications
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -174,6 +175,10 @@ CREATE INDEX IF NOT EXISTS idx_sync_log_ts ON sync_log(ts);
 const userCols = db.prepare("PRAGMA table_info(users)").all().map((c) => c.name);
 if (!userCols.includes('status')) {
   db.exec("ALTER TABLE users ADD COLUMN status TEXT NOT NULL DEFAULT 'active'");
+}
+const notifCols = db.prepare("PRAGMA table_info(notifications)").all().map((c) => c.name);
+if (!notifCols.includes('meta')) {
+  db.exec('ALTER TABLE notifications ADD COLUMN meta TEXT');
 }
 
 export function getSetting(key, fallback = null) {

@@ -6,15 +6,15 @@ export function broadcast(type, title, body = '') {
     .run(type, title, body);
 }
 
-/** Insert a personal notification. */
-export function notifyUser(userId, type, title, body = '') {
-  db.prepare('INSERT INTO notifications (user_id, type, title, body) VALUES (?, ?, ?, ?)')
-    .run(userId, type, title, body);
+/** Insert a personal notification; meta makes it actionable in the UI. */
+export function notifyUser(userId, type, title, body = '', meta = null) {
+  db.prepare('INSERT INTO notifications (user_id, type, title, body, meta) VALUES (?, ?, ?, ?, ?)')
+    .run(userId, type, title, body, meta ? JSON.stringify(meta) : null);
 }
 
 export function listForUser(userId, limit = 25) {
   return db.prepare(`
-    SELECT n.id, n.type, n.title, n.body, n.created_at,
+    SELECT n.id, n.type, n.title, n.body, n.meta, n.created_at,
            CASE WHEN r.notification_id IS NULL THEN 0 ELSE 1 END AS is_read
     FROM notifications n
     LEFT JOIN notification_reads r ON r.notification_id = n.id AND r.user_id = ?

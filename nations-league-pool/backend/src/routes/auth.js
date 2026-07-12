@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import db, { getSetting } from '../db/database.js';
 import { signToken, authenticate, invalidateSessions } from '../middleware/auth.js';
 import { notifyUser } from '../services/notify.js';
+import { notifyHomeAssistant } from '../services/ha.js';
 
 const router = Router();
 
@@ -58,12 +59,16 @@ router.post('/register', (req, res) => {
     return res.status(201).json({ token: signToken(user), user });
   }
 
-  // heads-up for every admin in their in-app notification bell
+  // heads-up for every admin: in-app bell (actionable) + push via Home Assistant
   const admins = db.prepare("SELECT id FROM users WHERE is_admin = 1 AND status = 'active'").all();
   for (const a of admins) {
     notifyUser(a.id, 'registration', `Nieuwe aanmelding: ${displayName} (@${username}) ⏳`,
-      'Keur de aanmelding goed of wijs af via Beheer → Gebruikers.');
+      'Keur de aanmelding direct hieronder goed, of via Beheer → Gebruikers.',
+      { pending_user_id: info.lastInsertRowid, username });
   }
+  notifyHomeAssistant('⚽ Nations League Pool',
+    `Nieuwe aanmelding van ${displayName} (@${username}) wacht op goedkeuring.`)
+    .catch(() => {});
   res.status(201).json({ pending: true, message: 'Aanmelding ontvangen! Zodra de beheerder je goedkeurt kun je inloggen.' });
 });
 

@@ -7,6 +7,7 @@ if [ -f /data/options.json ]; then
   JWT_SECRET=$(jq -r '.jwt_secret // ""' /data/options.json)
   ADMIN_PASSWORD=$(jq -r '.admin_password // ""' /data/options.json)
   INVITE_CODE=$(jq -r '.invite_code // ""' /data/options.json)
+  HA_NOTIFY_SERVICE=$(jq -r '.ha_notify_service // ""' /data/options.json)
   export DB_PATH=/data/nlpool.db
 fi
 
@@ -19,7 +20,7 @@ if [ -z "${JWT_SECRET}" ]; then
   exit 1
 fi
 
-export JWT_SECRET ADMIN_PASSWORD INVITE_CODE
+export JWT_SECRET ADMIN_PASSWORD INVITE_CODE HA_NOTIFY_SERVICE
 export PORT="${PORT:-8099}"
 export DB_PATH="${DB_PATH:-/data/nlpool.db}"
 

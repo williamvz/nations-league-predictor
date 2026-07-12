@@ -7,7 +7,16 @@ Voorspellingenpool voor de **UEFA Nations League 2026/27 (League A)** voor famil
 1. Zet bij **Configuratie** een `jwt_secret`: een lange willekeurige tekst (bijv. het resultaat van `openssl rand -hex 32`). Zonder dit geheim start de add-on niet.
 2. Optioneel: zet een `admin_password`. Laat je dit leeg, dan wordt er eenmalig een wachtwoord gegenereerd dat in het **Log** verschijnt.
 3. Optioneel: zet een `invite_code`. Iedereen kan zich altijd aanmelden via de loginpagina — nieuwe accounts wachten op jouw goedkeuring in **Beheer → Gebruikers** (je krijgt een melding 🔔). Wie de uitnodigingscode invult slaat de wachtrij over en doet direct mee.
-4. Start de add-on.
+4. Optioneel: zet `ha_notify_service` op een notify-service van Home Assistant, bijv. `notify.mobile_app_telefoon_van_william`. Nieuwe aanmeldingen komen dan als **pushmelding op je telefoon** binnen (via de HA companion-app). Laat je dit leeg, dan verschijnt er een melding in het Home Assistant-dashboard (persistent notification). De beschikbare services vind je in HA onder *Ontwikkelhulpmiddelen → Acties → notify.*
+5. Start de add-on.
+
+## Aanmeldingen & goedkeuring
+
+Iedereen kan zich aanmelden via de loginpagina. Zo verloopt de communicatie:
+
+1. **Aanmelding** → jij krijgt een 🔔-melding in de app én (indien ingesteld) een push op je telefoon via Home Assistant. De aanmelder ziet: *"Zodra William je goedkeurt kun je inloggen."*
+2. **Goedkeuren/afwijzen** → rechtstreeks vanuit de 🔔-melding, of via Beheer → Gebruikers (badge toont het aantal wachtenden). Afwijzen verwijdert de aanmelding en maakt de gebruikersnaam weer vrij.
+3. **Na goedkeuring** → probeert de speler in te loggen, dan lukt dat direct; bij de eerste login staat er een welkomstmelding klaar. (Er is bewust geen e-mail nodig — geen mailserver, niets te onderhouden.)
 
 ## Toegang
 

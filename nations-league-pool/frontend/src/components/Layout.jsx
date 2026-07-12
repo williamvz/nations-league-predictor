@@ -17,18 +17,23 @@ export default function Layout({ children }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [unread, setUnread] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [popup, setPopup] = useState(null);
   const seenRef = useRef(false);
 
-  // poll notifications + fresh achievements
+  // poll notifications + fresh achievements (+ pending registrations for admins)
   useEffect(() => {
     let stop = false;
     async function poll() {
       try {
         const d = await api.notifications();
         if (!stop) setUnread(d.unread);
+        if (user?.is_admin === 1) {
+          const dash = await api.admin.dashboard();
+          if (!stop) setPendingCount(dash.pending_users || 0);
+        }
         const a = await api.unseenAchievements();
         if (!stop && a.achievements.length > 0 && !seenRef.current) {
           seenRef.current = true;
@@ -66,6 +71,27 @@ export default function Layout({ children }) {
     }
   }
 
+  async function handleRegistration(notification, action) {
+    const userId = notification.meta?.pending_user_id;
+    let result;
+    try {
+      if (action === 'approve') await api.admin.approveUser(userId);
+      else await api.admin.rejectUser(userId);
+      result = action === 'approve' ? 'approved' : 'rejected';
+    } catch {
+      result = 'gone'; // already handled elsewhere (or user no longer pending)
+    }
+    setNotifications((list) =>
+      list.map((n) => (n.id === notification.id ? { ...n, handled: result } : n))
+    );
+    try {
+      const dash = await api.admin.dashboard();
+      setPendingCount(dash.pending_users || 0);
+    } catch {
+      /* ignore */
+    }
+  }
+
   return (
     <div className="pitch-bg min-h-screen">
       {/* top bar */}
@@ -93,10 +119,15 @@ export default function Layout({ children }) {
             <NavLink
               to="/meer"
               className={({ isActive }) =>
-                `rounded-xl px-3 py-1.5 text-sm font-semibold ${isActive ? 'bg-oranje-500/15 text-oranje-300' : 'text-emerald-50/60 hover:bg-white/5'}`
+                `relative rounded-xl px-3 py-1.5 text-sm font-semibold ${isActive ? 'bg-oranje-500/15 text-oranje-300' : 'text-emerald-50/60 hover:bg-white/5'}`
               }
             >
               ☰ Meer
+              {pendingCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-oranje-500 px-1 text-[10px] font-bold text-pitch-950">
+                  {pendingCount}
+                </span>
+              )}
             </NavLink>
           </nav>
 
@@ -126,10 +157,17 @@ export default function Layout({ children }) {
               key={n.to}
               to={n.to}
               className={({ isActive }) =>
-                `flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold ${isActive ? 'text-oranje-400' : 'text-emerald-50/50'}`
+                `relative flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold ${isActive ? 'text-oranje-400' : 'text-emerald-50/50'}`
               }
             >
-              <span className="text-lg">{n.icon}</span>
+              <span className="relative text-lg">
+                {n.icon}
+                {n.to === '/meer' && pendingCount > 0 && (
+                  <span className="absolute -right-2.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-oranje-500 px-1 text-[10px] font-bold text-pitch-950">
+                    {pendingCount}
+                  </span>
+                )}
+              </span>
               {n.label}
             </NavLink>
           ))}
@@ -156,6 +194,27 @@ export default function Layout({ children }) {
             <div key={n.id} className={`rounded-xl p-3 ${n.is_read ? 'bg-white/[0.03]' : 'bg-oranje-500/10'}`}>
               <div className="text-sm font-semibold">{n.title}</div>
               {n.body && <div className="text-sm text-emerald-50/60">{n.body}</div>}
+              {n.type === 'registration' && n.meta?.pending_user_id && user?.is_admin === 1 && (
+                n.handled ? (
+                  <div className="mt-2 text-sm text-emerald-50/50">
+                    {n.handled === 'approved' && '✓ Goedgekeurd'}
+                    {n.handled === 'rejected' && '✕ Afgewezen'}
+                    {n.handled === 'gone' && 'Al verwerkt'}
+                  </div>
+                ) : (
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      className="btn flex-1 bg-emerald-500 !py-1.5 text-pitch-950 hover:bg-emerald-400"
+                      onClick={() => handleRegistration(n, 'approve')}
+                    >
+                      ✓ Goedkeuren
+                    </button>
+                    <button className="btn-ghost flex-1 !py-1.5" onClick={() => handleRegistration(n, 'reject')}>
+                      ✕ Afwijzen
+                    </button>
+                  </div>
+                )
+              )}
               <div className="mt-1 text-xs text-emerald-50/40">
                 {new Date(n.created_at.replace(' ', 'T') + 'Z').toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam' })}
               </div>
