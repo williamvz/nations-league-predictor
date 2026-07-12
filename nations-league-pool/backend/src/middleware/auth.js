@@ -22,9 +22,12 @@ export function authenticate(req, res, next) {
   }
 
   const user = db
-    .prepare('SELECT id, username, display_name, is_admin, avatar, favorite_team_id, must_change_password FROM users WHERE id = ?')
+    .prepare('SELECT id, username, display_name, is_admin, status, avatar, favorite_team_id, must_change_password FROM users WHERE id = ?')
     .get(payload.userId);
   if (!user) return res.status(401).json({ error: 'Gebruiker bestaat niet meer' });
+  if (user.status !== 'active') {
+    return res.status(401).json({ error: 'Je account wacht op goedkeuring door de beheerder' });
+  }
 
   const validAfter = db.prepare('SELECT value FROM settings WHERE key = ?').get(`tokens_valid_after_${user.id}`);
   if (validAfter && payload.iat < Number(validAfter.value)) {

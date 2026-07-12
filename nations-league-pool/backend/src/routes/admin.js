@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import db, { getSetting, setSetting } from '../db/database.js';
 import { authenticate, requireAdmin, invalidateSessions } from '../middleware/auth.js';
 import { processMatchResult } from '../services/scoring.js';
-import { broadcast } from '../services/notify.js';
+import { broadcast, notifyUser } from '../services/notify.js';
 import { syncScores, syncFixtures, recomputeScorers } from '../sync/engine.js';
 import { resolveBonusQuestions } from '../services/bonus.js';
 
@@ -24,8 +24,9 @@ router.get('/dashboard', (req, res) => {
     ORDER BY m.kickoff_utc ASC LIMIT 8
   `).all();
   const lastSync = db.prepare('SELECT * FROM sync_log ORDER BY id DESC LIMIT 1').get();
+  const pending = db.prepare("SELECT COUNT(*) AS n FROM users WHERE status = 'pending'").get().n;
   res.json({
-    users, matches: matches.n, finished: matches.finished || 0, predictions,
+    users, pending_users: pending, matches: matches.n, finished: matches.finished || 0, predictions,
     next_matches: nextMatches, last_sync: lastSync || null,
     sync_enabled: getSetting('sync_enabled', '1') === '1',
     invite_code: getSetting('invite_code', process.env.INVITE_CODE || ''),
@@ -36,11 +37,30 @@ router.get('/dashboard', (req, res) => {
 
 router.get('/users', (req, res) => {
   const users = db.prepare(`
-    SELECT u.id, u.username, u.display_name, u.avatar, u.is_admin, u.created_at, u.last_login_at,
+    SELECT u.id, u.username, u.display_name, u.avatar, u.is_admin, u.status, u.created_at, u.last_login_at,
            (SELECT COUNT(*) FROM predictions p WHERE p.user_id = u.id) AS prediction_count
-    FROM users u ORDER BY u.username ASC
+    FROM users u
+    ORDER BY CASE u.status WHEN 'pending' THEN 0 ELSE 1 END, u.username ASC
   `).all();
   res.json({ users });
+});
+
+router.post('/users/:id/approve', (req, res) => {
+  const userId = Number(req.params.id);
+  const user = db.prepare("SELECT * FROM users WHERE id = ? AND status = 'pending'").get(userId);
+  if (!user) return res.status(404).json({ error: 'Geen openstaande aanmelding gevonden' });
+  db.prepare("UPDATE users SET status = 'active' WHERE id = ?").run(userId);
+  notifyUser(userId, 'registration', 'Je aanmelding is goedgekeurd! 🎉',
+    'Welkom bij de pool. Vul snel je voorspellingen en bonusvragen in!');
+  res.json({ ok: true });
+});
+
+router.post('/users/:id/reject', (req, res) => {
+  const userId = Number(req.params.id);
+  // rejecting simply removes the pending account, so the username is free again
+  const info = db.prepare("DELETE FROM users WHERE id = ? AND status = 'pending'").run(userId);
+  if (info.changes === 0) return res.status(404).json({ error: 'Geen openstaande aanmelding gevonden' });
+  res.json({ ok: true });
 });
 
 router.post('/users', (req, res) => {

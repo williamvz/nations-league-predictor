@@ -2,6 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import db, { getSetting } from '../db/database.js';
 import { signToken, authenticate, invalidateSessions } from '../middleware/auth.js';
+import { notifyUser } from '../services/notify.js';
 
 const router = Router();
 
@@ -18,20 +19,18 @@ router.post('/login', (req, res) => {
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     return res.status(401).json({ error: 'Onjuiste gebruikersnaam of wachtwoord' });
   }
+  if (user.status === 'pending') {
+    return res.status(403).json({ error: 'Je aanmelding wacht nog op goedkeuring door de beheerder ⏳' });
+  }
   db.prepare("UPDATE users SET last_login_at = datetime('now') WHERE id = ?").run(user.id);
   const publicUser = db.prepare(`SELECT ${PUBLIC_USER} FROM users WHERE id = ?`).get(user.id);
   res.json({ token: signToken(user), user: publicUser });
 });
 
-// Self-registration with the pool's invite code (set by the admin / add-on
-// config). No code configured → registration closed, admin creates accounts.
+// Open self-registration. New accounts start as 'pending' and must be
+// approved by an admin in the app. A correct invite code (if configured)
+// skips the approval queue.
 router.post('/register', (req, res) => {
-  const inviteCode = getSetting('invite_code', process.env.INVITE_CODE || '');
-  if (!inviteCode) return res.status(403).json({ error: 'Registratie is gesloten. Vraag William om een account.' });
-  if (String(req.body.invite_code || '').trim().toLowerCase() !== inviteCode.trim().toLowerCase()) {
-    return res.status(403).json({ error: 'Onjuiste uitnodigingscode' });
-  }
-
   const username = sanitizeUsername(req.body.username);
   const password = String(req.body.password || '');
   if (!/^[\w.-]{3,20}$/.test(username)) {
@@ -42,13 +41,30 @@ router.post('/register', (req, res) => {
     return res.status(409).json({ error: 'Deze gebruikersnaam is al bezet' });
   }
 
+  const inviteCode = getSetting('invite_code', process.env.INVITE_CODE || '');
+  const codeGiven = String(req.body.invite_code || '').trim();
+  if (codeGiven && (!inviteCode || codeGiven.toLowerCase() !== inviteCode.trim().toLowerCase())) {
+    return res.status(403).json({ error: 'Onjuiste uitnodigingscode (laat leeg om zonder code aan te melden)' });
+  }
+  const autoApproved = Boolean(inviteCode && codeGiven);
+
   const displayName = sanitizeUsername(req.body.display_name) || username;
   const info = db.prepare(
-    'INSERT INTO users (username, display_name, password_hash, avatar) VALUES (?, ?, ?, ?)'
-  ).run(username, displayName.slice(0, 30), bcrypt.hashSync(password, 10), '⚽');
+    'INSERT INTO users (username, display_name, password_hash, avatar, status) VALUES (?, ?, ?, ?, ?)'
+  ).run(username, displayName.slice(0, 30), bcrypt.hashSync(password, 10), '⚽', autoApproved ? 'active' : 'pending');
 
-  const user = db.prepare(`SELECT ${PUBLIC_USER} FROM users WHERE id = ?`).get(info.lastInsertRowid);
-  res.status(201).json({ token: signToken(user), user });
+  if (autoApproved) {
+    const user = db.prepare(`SELECT ${PUBLIC_USER} FROM users WHERE id = ?`).get(info.lastInsertRowid);
+    return res.status(201).json({ token: signToken(user), user });
+  }
+
+  // heads-up for every admin in their in-app notification bell
+  const admins = db.prepare("SELECT id FROM users WHERE is_admin = 1 AND status = 'active'").all();
+  for (const a of admins) {
+    notifyUser(a.id, 'registration', `Nieuwe aanmelding: ${displayName} (@${username}) ⏳`,
+      'Keur de aanmelding goed of wijs af via Beheer → Gebruikers.');
+  }
+  res.status(201).json({ pending: true, message: 'Aanmelding ontvangen! Zodra de beheerder je goedkeurt kun je inloggen.' });
 });
 
 router.get('/me', authenticate, (req, res) => {

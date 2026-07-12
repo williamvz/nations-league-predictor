@@ -114,9 +114,44 @@ function UsersTab() {
     }
   }
 
+  const pending = users.filter((u) => u.status === 'pending');
+  const active = users.filter((u) => u.status !== 'pending');
+
   return (
     <div className="space-y-4">
       <ErrorNote error={error} />
+
+      {pending.length > 0 && (
+        <div className="card space-y-2 border-oranje-500/40 p-4">
+          <h2 className="font-bold text-oranje-300">⏳ Wacht op goedkeuring ({pending.length})</h2>
+          {pending.map((u) => (
+            <div key={u.id} className="flex flex-wrap items-center gap-3 rounded-xl bg-white/[0.03] p-3">
+              <span className="text-xl">{u.avatar}</span>
+              <div className="min-w-[10rem] flex-1">
+                <div className="font-semibold">{u.display_name} <span className="text-xs text-emerald-50/40">@{u.username}</span></div>
+                <div className="text-xs text-emerald-50/40">aangemeld op {u.created_at?.slice(0, 10)}</div>
+              </div>
+              <button
+                className="btn bg-emerald-500 text-pitch-950 hover:bg-emerald-400"
+                onClick={() => run(() => api.admin.approveUser(u.id))}
+              >
+                ✓ Goedkeuren
+              </button>
+              <button
+                className="btn-ghost"
+                onClick={() => {
+                  if (window.confirm(`Aanmelding van ${u.display_name} afwijzen?`)) {
+                    run(() => api.admin.rejectUser(u.id));
+                  }
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="card space-y-2 p-4">
         <h2 className="font-bold">Nieuwe speler</h2>
         <div className="grid gap-2 sm:grid-cols-3">
@@ -137,7 +172,7 @@ function UsersTab() {
       </div>
 
       <div className="card divide-y divide-white/5">
-        {users.map((u) => (
+        {active.map((u) => (
           <div key={u.id} className="flex items-center gap-3 p-3">
             <span className="text-xl">{u.avatar}</span>
             <div className="min-w-0 flex-1">

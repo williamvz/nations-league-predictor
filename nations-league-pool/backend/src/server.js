@@ -40,10 +40,14 @@ app.use('/api/admin', adminRoutes);
 
 app.get('/api/health', (req, res) => res.json({ ok: true, ts: new Date().toISOString() }));
 
-// registration availability (login page shows/hides the register link)
+// registration is always open (new accounts await admin approval); a correct
+// invite code skips the approval queue
 app.get('/api/meta', async (req, res) => {
   const { getSetting } = await import('./db/database.js');
-  res.json({ registration_open: Boolean(getSetting('invite_code', process.env.INVITE_CODE || '')) });
+  res.json({
+    registration_open: true,
+    has_invite_code: Boolean(getSetting('invite_code', process.env.INVITE_CODE || '')),
+  });
 });
 
 app.use('/api', (req, res) => res.status(404).json({ error: 'Onbekend endpoint' }));

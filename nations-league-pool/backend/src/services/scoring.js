@@ -110,6 +110,7 @@ export function finalizeMatchdayIfComplete(matchday) {
     LEFT JOIN (
       SELECT user_id, SUM(points) AS pts FROM bonus_answers WHERE points IS NOT NULL GROUP BY user_id
     ) bon ON bon.user_id = u.id
+    WHERE u.status = 'active'
     ORDER BY total_points DESC, u.username ASC
   `).all(matchday);
 

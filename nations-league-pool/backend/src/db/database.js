@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
   display_name TEXT NOT NULL,
   password_hash TEXT NOT NULL,
   is_admin INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'active',     -- active | pending (awaiting admin approval)
   avatar TEXT NOT NULL DEFAULT '⚽',
   favorite_team_id INTEGER REFERENCES teams(id),
   must_change_password INTEGER NOT NULL DEFAULT 0,
@@ -168,6 +169,12 @@ CREATE INDEX IF NOT EXISTS idx_predictions_match ON predictions(match_id);
 CREATE INDEX IF NOT EXISTS idx_predictions_user ON predictions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sync_log_ts ON sync_log(ts);
 `);
+
+// idempotent migrations for databases created before a column existed
+const userCols = db.prepare("PRAGMA table_info(users)").all().map((c) => c.name);
+if (!userCols.includes('status')) {
+  db.exec("ALTER TABLE users ADD COLUMN status TEXT NOT NULL DEFAULT 'active'");
+}
 
 export function getSetting(key, fallback = null) {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);

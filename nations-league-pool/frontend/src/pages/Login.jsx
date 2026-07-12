@@ -6,13 +6,14 @@ import { ErrorNote } from '../components/ui';
 export default function Login() {
   const { login, register } = useAuth();
   const [mode, setMode] = useState('login');
-  const [registrationOpen, setRegistrationOpen] = useState(false);
+  const [hasInviteCode, setHasInviteCode] = useState(false);
   const [form, setForm] = useState({ username: '', password: '', display_name: '', invite_code: '' });
   const [error, setError] = useState(null);
+  const [notice, setNotice] = useState(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    api.meta().then((d) => setRegistrationOpen(d.registration_open)).catch(() => {});
+    api.meta().then((d) => setHasInviteCode(d.has_invite_code)).catch(() => {});
   }, []);
 
   function set(k, v) {
@@ -23,9 +24,17 @@ export default function Login() {
     e.preventDefault();
     setBusy(true);
     setError(null);
+    setNotice(null);
     try {
-      if (mode === 'login') await login(form.username, form.password);
-      else await register(form);
+      if (mode === 'login') {
+        await login(form.username, form.password);
+      } else {
+        const d = await register(form);
+        if (d.pending) {
+          setMode('login');
+          setNotice('Aanmelding ontvangen! ⏳ Zodra William je goedkeurt kun je hier inloggen.');
+        }
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -45,6 +54,11 @@ export default function Login() {
         </div>
 
         <form className="card space-y-3 p-5" onSubmit={submit}>
+          {notice && (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+              {notice}
+            </div>
+          )}
           <input
             className="input"
             placeholder="Gebruikersnaam"
@@ -71,28 +85,36 @@ export default function Login() {
                 value={form.display_name}
                 onChange={(e) => set('display_name', e.target.value)}
               />
-              <input
-                className="input"
-                placeholder="Uitnodigingscode"
-                value={form.invite_code}
-                onChange={(e) => set('invite_code', e.target.value)}
-                required
-              />
+              {hasInviteCode && (
+                <input
+                  className="input"
+                  placeholder="Uitnodigingscode (optioneel)"
+                  value={form.invite_code}
+                  onChange={(e) => set('invite_code', e.target.value)}
+                />
+              )}
+              <p className="text-xs text-emerald-50/40">
+                {hasInviteCode
+                  ? 'Met een geldige code doe je direct mee; zonder code keurt de beheerder je aanmelding eerst goed.'
+                  : 'Na je aanmelding keurt de beheerder je account goed — daarna kun je inloggen.'}
+              </p>
             </>
           )}
           <ErrorNote error={error} />
           <button className="btn-primary w-full" disabled={busy}>
-            {busy ? 'Even geduld…' : mode === 'login' ? 'Inloggen' : 'Account aanmaken'}
+            {busy ? 'Even geduld…' : mode === 'login' ? 'Inloggen' : 'Aanmelden'}
           </button>
-          {registrationOpen && (
-            <button
-              type="button"
-              className="w-full text-center text-sm text-emerald-50/50 hover:text-oranje-300"
-              onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-            >
-              {mode === 'login' ? 'Nieuw? Maak een account met je uitnodigingscode →' : '← Terug naar inloggen'}
-            </button>
-          )}
+          <button
+            type="button"
+            className="w-full text-center text-sm text-emerald-50/50 hover:text-oranje-300"
+            onClick={() => {
+              setMode(mode === 'login' ? 'register' : 'login');
+              setError(null);
+              setNotice(null);
+            }}
+          >
+            {mode === 'login' ? 'Nog geen account? Meld je aan →' : '← Terug naar inloggen'}
+          </button>
         </form>
       </div>
     </div>

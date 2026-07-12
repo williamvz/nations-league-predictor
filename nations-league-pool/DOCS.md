@@ -6,7 +6,7 @@ Voorspellingenpool voor de **UEFA Nations League 2026/27 (League A)** voor famil
 
 1. Zet bij **Configuratie** een `jwt_secret`: een lange willekeurige tekst (bijv. het resultaat van `openssl rand -hex 32`). Zonder dit geheim start de add-on niet.
 2. Optioneel: zet een `admin_password`. Laat je dit leeg, dan wordt er eenmalig een wachtwoord gegenereerd dat in het **Log** verschijnt.
-3. Optioneel: zet een `invite_code`. Met deze code kunnen vrienden zélf een account aanmaken op de loginpagina. Leeg = registratie gesloten (jij maakt accounts aan via Beheer).
+3. Optioneel: zet een `invite_code`. Iedereen kan zich altijd aanmelden via de loginpagina — nieuwe accounts wachten op jouw goedkeuring in **Beheer → Gebruikers** (je krijgt een melding 🔔). Wie de uitnodigingscode invult slaat de wachtrij over en doet direct mee.
 4. Start de add-on.
 
 ## Toegang

@@ -30,6 +30,7 @@ function baseRows() {
     LEFT JOIN (
       SELECT user_id, SUM(points) AS pts FROM bonus_answers WHERE points IS NOT NULL GROUP BY user_id
     ) bon ON bon.user_id = u.id
+    WHERE u.status = 'active'
   `).all();
 }
 

@@ -28,9 +28,12 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(async (payload) => {
     const d = await api.register(payload);
-    setToken(d.token);
-    setUser(d.user);
-    return d.user;
+    // without an invite code the account is pending: no token yet
+    if (d.token) {
+      setToken(d.token);
+      setUser(d.user);
+    }
+    return d;
   }, []);
 
   const logout = useCallback(() => {

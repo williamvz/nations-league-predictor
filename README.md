@@ -15,7 +15,7 @@ Runs as a **Home Assistant add-on** on a Raspberry Pi (or standalone with Docker
 | Bonus grading | fragile string compare | ✅ automatic (standings/scorer based) |
 | HA ingress | broken (absolute paths) | ✅ works — relative assets + hash routing |
 | Timezones | countdowns drifted abroad | ✅ everything pinned to Europe/Amsterdam |
-| Extra | — | 🃏 joker (×2, 1 per matchday), rank-history bump chart, head-to-head compare, community stats, 16 achievements (all actually attainable), self-registration with invite code |
+| Extra | — | 🃏 joker (×2, 1 per matchday), rank-history bump chart, head-to-head compare, community stats, 16 achievements (all actually attainable), open self-registration with in-app admin approval (invite code = skip the queue) |
 
 ## 🏠 Install on Home Assistant (Raspberry Pi 5)
 
@@ -29,7 +29,7 @@ Runs as a **Home Assistant add-on** on a Raspberry Pi (or standalone with Docker
 4. In the add-on **Configuration** tab set:
    - `jwt_secret` — long random string (`openssl rand -hex 32`)
    - `admin_password` — optional; auto-generated and printed in the log if empty
-   - `invite_code` — optional; lets friends self-register with this code
+   - `invite_code` — optional; anyone can register (you approve them in-app), but this code skips the approval queue
 5. **Start** → open **NL Pool** in the sidebar, or share `http://<pi-ip>:8099` with friends (Add to Home Screen = app experience)
 
 **Route B — local add-on (private repo):**

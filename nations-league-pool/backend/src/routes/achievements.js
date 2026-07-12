@@ -7,7 +7,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', (req, res) => {
-  const userCount = db.prepare('SELECT COUNT(*) AS n FROM users').get().n || 1;
+  const userCount = db.prepare("SELECT COUNT(*) AS n FROM users WHERE status = 'active'").get().n || 1;
   const unlockedAll = db.prepare(
     'SELECT achievement_key, COUNT(*) AS n FROM achievements GROUP BY achievement_key'
   ).all();
