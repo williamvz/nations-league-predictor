@@ -1,0 +1,7 @@
+# The Dockerfile uses the multi-arch node:20-alpine image directly, so no
+# per-architecture base image mapping is needed. This file exists so the
+# Supervisor builder treats the add-on as a local build.
+build_from:
+  aarch64: node:20-alpine
+  amd64: node:20-alpine
+  armv7: node:20-alpine

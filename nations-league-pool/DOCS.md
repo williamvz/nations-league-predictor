@@ -1,0 +1,68 @@
+# Nations League Pool
+
+Voorspellingenpool voor de **UEFA Nations League 2026/27 (League A)** voor familie en vrienden. Uitslagen, de stand, topscorers en bonusvragen worden **volledig automatisch** bijgewerkt — je hoeft als beheerder niets in te voeren.
+
+## Installatie
+
+1. Zet bij **Configuratie** een `jwt_secret`: een lange willekeurige tekst (bijv. het resultaat van `openssl rand -hex 32`). Zonder dit geheim start de add-on niet.
+2. Optioneel: zet een `admin_password`. Laat je dit leeg, dan wordt er eenmalig een wachtwoord gegenereerd dat in het **Log** verschijnt.
+3. Optioneel: zet een `invite_code`. Iedereen kan zich altijd aanmelden via de loginpagina — nieuwe accounts wachten op jouw goedkeuring in **Beheer → Gebruikers** (je krijgt een melding 🔔). Wie de uitnodigingscode invult slaat de wachtrij over en doet direct mee.
+4. Optioneel: zet `ha_notify_service` op een notify-service van Home Assistant, bijv. `notify.mobile_app_telefoon_van_william`. Nieuwe aanmeldingen komen dan als **pushmelding op je telefoon** binnen (via de HA companion-app). Laat je dit leeg, dan verschijnt er een melding in het Home Assistant-dashboard (persistent notification). De beschikbare services vind je in HA onder *Ontwikkelhulpmiddelen → Acties → notify.*
+5. Start de add-on.
+
+## Aanmeldingen & goedkeuring
+
+Iedereen kan zich aanmelden via de loginpagina. Zo verloopt de communicatie:
+
+1. **Aanmelding** → jij krijgt een 🔔-melding in de app én (indien ingesteld) een push op je telefoon via Home Assistant. De aanmelder ziet: *"Zodra William je goedkeurt kun je inloggen."*
+2. **Goedkeuren/afwijzen** → rechtstreeks vanuit de 🔔-melding, of via Beheer → Gebruikers (badge toont het aantal wachtenden). Afwijzen verwijdert de aanmelding en maakt de gebruikersnaam weer vrij.
+3. **Na goedkeuring** → probeert de speler in te loggen, dan lukt dat direct; bij de eerste login staat er een welkomstmelding klaar. (Er is bewust geen e-mail nodig — geen mailserver, niets te onderhouden.)
+
+## Toegang
+
+- **Via de zijbalk** (ingress): klik op *NL Pool* in het Home Assistant-menu. Werkt ook in de HA companion-app.
+- **Direct via poort 8099**: `http://<ip-van-je-pi>:8099` — handig voor vrienden zonder Home Assistant-account. Op iPhone/Android: *Zet op beginscherm* voor de app-ervaring (PWA).
+
+De eerste beheerder heet `william` (aanpasbaar met de omgevingsvariabele `ADMIN_USERNAME` bij standalone gebruik).
+
+## Automatische synchronisatie
+
+De add-on haalt zelf alles op — er is geen configuratie nodig:
+
+| Wanneer | Wat |
+|---|---|
+| Elke 2 min (alleen rond wedstrijden) | Live scores + tussenstanden |
+| Elke 20 min | Vangnet-sweep: gemiste uitslagen |
+| Dagelijks 05:30 | Speelschema (aftraptijden, uitstellingen) |
+| Bij het opstarten | Inhaalslag (voor als de Pi uit stond) |
+
+Bronnen: ESPN (primair, incl. doelpuntenmakers) met TheSportsDB als reserve. Zodra een wedstrijd afgelopen is worden de punten berekend, de ranglijst bijgewerkt en krijgt iedereen een melding. Groepswinnaar- en topscorer-bonusvragen keren zichzelf automatisch uit.
+
+Gaat er toch iets mis? In **Beheer → Status** zie je de synclog en kun je handmatig synchroniseren; onder **Uitslagen** kun je altijd handmatig een uitslag invoeren (die wordt nooit door de sync overschreven).
+
+## Gegevens & back-up
+
+Alle data staat in één SQLite-bestand op `/data/nlpool.db` en blijft bewaard bij updates en herstarten. Het valt automatisch binnen Home Assistant-back-ups van de add-on.
+
+## Puntentelling
+
+| Voorspelling | Punten |
+|---|---|
+| Exacte uitslag | **5** |
+| Juiste winnaar + doelsaldo | **3** |
+| Juiste winnaar (of gelijkspel) | **2** |
+| 🃏 Joker (1 per speelronde) | **×2** |
+
+Knock-outfase: kwartfinale ×1,5 · halve finale ×2 · troostfinale ×2 · finale ×2,5.
+
+Bonusvragen: groepswinnaars (4 × 5 pt), topscorer (5 pt), aantal punten van Nederland (5 pt, ±1 = 2 pt), Nations League-kampioen (10 pt). Er valt niets te winnen behalve **eeuwige roem**. 😤
+
+## Volledige toernooi
+
+De pool loopt door tot en met de finale in juni 2027. De kwartfinales (maart 2027, heen + terug) en de Final Four (juni 2027) worden **automatisch toegevoegd** zodra de loting bekend is en de wedstrijden bij de databronnen verschijnen — iedereen krijgt een melding dat er nieuwe wedstrijden te voorspellen zijn. Eindigt een knock-outwedstrijd gelijk, dan wordt de strafschoppenwinnaar automatisch geregistreerd (punten tellen over de uitslag na 90 minuten).
+
+## Meldingen naar spelers
+
+- **Pushmeldingen** (aan te zetten via Profiel, per apparaat): uitslagen, dagwinnaar, speelronde-herinneringen en "laatste kans"-alerts als je nog niet alles hebt ingevuld. Werkt op telefoon en desktop zodra de app via HTTPS of Home Assistant wordt geopend; de sleutels worden automatisch gegenereerd, er is niets te configureren.
+- **Speelronde-herinneringen**: ±24 uur vóór elke speelronde (iedereen) en ±3 uur ervoor (alleen wie nog gaten heeft). Jij krijgt via Home Assistant een overzichtje van wie er nog niet klaar is.
+- **Deelknop** op de ranglijst: maakt een deelbare afbeelding van de stand voor in de familie-app. 📤
