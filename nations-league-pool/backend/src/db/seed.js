@@ -51,22 +51,22 @@ export function seed() {
 }
 
 function seedBonusQuestions() {
-  const count = db.prepare('SELECT COUNT(*) AS n FROM bonus_questions').get().n;
-  if (count > 0) return;
-
   const firstKickoff = db.prepare("SELECT MIN(kickoff_utc) AS k FROM matches WHERE stage = 'league'").get().k;
   const md3Kickoff = db.prepare("SELECT MIN(kickoff_utc) AS k FROM matches WHERE matchday = 3").get().k;
 
+  // INSERT OR IGNORE per key: existing databases pick up new questions on update
   const ins = db.prepare(`
-    INSERT INTO bonus_questions (question_key, question_nl, answer_type, team_group, deadline_utc, points, points_close)
+    INSERT OR IGNORE INTO bonus_questions (question_key, question_nl, answer_type, team_group, deadline_utc, points, points_close)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
+  let added = 0;
   for (const g of ['A1', 'A2', 'A3', 'A4']) {
-    ins.run(`winner_${g}`, `Wie wint groep ${g}?`, 'team', g, firstKickoff, 5, 0);
+    added += ins.run(`winner_${g}`, `Wie wint groep ${g}?`, 'team', g, firstKickoff, 5, 0).changes;
   }
-  ins.run('top_scorer', 'Wie wordt topscorer van de League A-groepsfase?', 'player', null, md3Kickoff, 5, 0);
-  ins.run('points_ned', 'Hoeveel punten haalt Nederland in de groepsfase? (0–18)', 'number', null, firstKickoff, 5, 2);
-  console.log('✅ Bonusvragen toegevoegd');
+  added += ins.run('top_scorer', 'Wie wordt topscorer van de League A-groepsfase?', 'player', null, md3Kickoff, 5, 0).changes;
+  added += ins.run('points_ned', 'Hoeveel punten haalt Nederland in de groepsfase? (0–18)', 'number', null, firstKickoff, 5, 2).changes;
+  added += ins.run('champion', 'Wie wint de Nations League? (finale juni 2027)', 'team', null, firstKickoff, 10, 0).changes;
+  if (added > 0) console.log(`✅ ${added} bonusvra(a)g(en) toegevoegd`);
 }
 
 function seedAdmin() {

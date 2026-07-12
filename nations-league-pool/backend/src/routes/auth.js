@@ -69,6 +69,12 @@ router.post('/register', (req, res) => {
   notifyHomeAssistant('⚽ Nations League Pool',
     `Nieuwe aanmelding van ${displayName} (@${username}) wacht op goedkeuring.`)
     .catch(() => {});
+  import('../services/push.js').then(({ sendPush, adminUserIds }) =>
+    sendPush(adminUserIds(), {
+      title: '⏳ Nieuwe aanmelding',
+      body: `${displayName} (@${username}) wacht op goedkeuring.`,
+    })
+  ).catch(() => {});
   res.status(201).json({ pending: true, message: 'Aanmelding ontvangen! Zodra de beheerder je goedkeurt kun je inloggen.' });
 });
 

@@ -4,6 +4,7 @@ import { fetchSeason as tsdbFetch } from './providers/sportsdb.js';
 import { findTeam, findMatch, rememberProviderId } from './matcher.js';
 import { processMatchResult } from '../services/scoring.js';
 import { resolveBonusQuestions } from '../services/bonus.js';
+import { broadcast } from '../services/notify.js';
 
 function log(job, provider, ok, message) {
   db.prepare('INSERT INTO sync_log (job, provider, ok, message) VALUES (?, ?, ?, ?)')
@@ -36,12 +37,81 @@ function datesNeedingScores() {
   return [...days].sort().map((d) => d.replaceAll('-', ''));
 }
 
-function applyEvent(ev, provider, { updateKickoff = false } = {}) {
+/**
+ * Knockout rounds are drawn after the league phase, so their fixtures can't
+ * be seeded up front. When a provider sends a match between two League A
+ * teams in a knockout window, we create it automatically.
+ * Returns 'quarterfinal' for the March 2027 window and 'semifinal' for the
+ * June 2027 Finals window (the exact semi/third-place/final split is fixed
+ * afterwards by classifyFinals). Promotion/relegation play-offs involve
+ * League B teams we don't track, so those events never match two teams.
+ */
+export function inferKnockoutStage(kickoffIso) {
+  const d = kickoffIso.slice(0, 10);
+  if (d >= '2027-03-01' && d <= '2027-04-15') return 'quarterfinal';
+  if (d >= '2027-05-20' && d <= '2027-06-30') return 'semifinal';
+  return null;
+}
+
+function knockoutMatchday(stage, kickoffIso) {
+  if (stage === 'quarterfinal') {
+    // two-legged: first legs 25-27 March, returns 28-30 March
+    return kickoffIso.slice(0, 10) <= '2027-03-27' ? 7 : 8;
+  }
+  return 9; // Finals week
+}
+
+function createKnockoutMatch(ev, provider, home, away) {
+  const stage = inferKnockoutStage(ev.kickoffIso);
+  if (!stage) return null;
+  let info;
+  try {
+    info = db.prepare(`
+      INSERT INTO matches (matchday, group_name, stage, home_team_id, away_team_id, kickoff_utc, kickoff_confirmed)
+      VALUES (?, 'KO', ?, ?, ?, ?, 1)
+    `).run(knockoutMatchday(stage, ev.kickoffIso), stage, home.id, away.id, ev.kickoffIso);
+  } catch {
+    // another provider already created this pairing (UNIQUE home/away/stage)
+    return db.prepare('SELECT * FROM matches WHERE home_team_id = ? AND away_team_id = ? AND stage = ?')
+      .get(home.id, away.id, stage);
+  }
+  log('fixtures', provider, true, `Knock-outwedstrijd toegevoegd: ${home.code}-${away.code} (${stage})`);
+  broadcast('fixture', `Nieuwe knock-outwedstrijd! 🏆`,
+    `${home.flag} ${home.name_nl} – ${away.name_nl} ${away.flag}. Voorspellen kan vanaf nu!`);
+  return db.prepare('SELECT * FROM matches WHERE id = ?').get(info.lastInsertRowid);
+}
+
+/**
+ * The June Finals arrive from providers as an undifferentiated batch; kickoff
+ * order settles what is what: first two = semifinals, then third place, then
+ * the final. Re-runs safely as fixtures firm up.
+ */
+export function classifyFinals() {
+  const finals = db.prepare(`
+    SELECT * FROM matches WHERE stage IN ('semifinal', 'third_place', 'final')
+    ORDER BY kickoff_utc ASC, id ASC
+  `).all();
+  if (finals.length < 3) return;
+  const order = finals.length >= 4
+    ? ['semifinal', 'semifinal', 'third_place', 'final']
+    : ['semifinal', 'semifinal', 'final'];
+  for (let i = 0; i < finals.length; i++) {
+    const want = order[Math.min(i, order.length - 1)];
+    if (finals[i].stage !== want) {
+      db.prepare("UPDATE matches SET stage = ?, points_calculated = 0, updated_at = datetime('now') WHERE id = ?")
+        .run(want, finals[i].id);
+      if (finals[i].status === 'finished') processMatchResult(finals[i].id, { notify: false });
+    }
+  }
+}
+
+export function applyEvent(ev, provider, { updateKickoff = false } = {}) {
   const home = findTeam(ev.homeName);
   const away = findTeam(ev.awayName);
   if (!home || !away) return { matched: false };
 
-  const match = findMatch(provider, ev.providerId, home, away, ev.kickoffIso);
+  let match = findMatch(provider, ev.providerId, home, away, ev.kickoffIso);
+  if (!match && ev.kickoffIso) match = createKnockoutMatch(ev, provider, home, away);
   if (!match) return { matched: false };
 
   rememberProviderId(match.id, provider, ev.providerId);
@@ -77,6 +147,10 @@ function applyEvent(ev, provider, { updateKickoff = false } = {}) {
         result_source = ?, points_calculated = 0, updated_at = datetime('now')
       WHERE id = ? AND (status != 'finished' OR home_score != ? OR away_score != ? OR points_calculated = 0)
     `).run(ev.homeScore, ev.awayScore, provider, match.id, ev.homeScore, ev.awayScore);
+    if (ev.winnerName) {
+      const winner = findTeam(ev.winnerName);
+      if (winner) db.prepare('UPDATE matches SET winner_team_id = ? WHERE id = ?').run(winner.id, match.id);
+    }
     storeGoals(match, ev, home, away);
     processMatchResult(match.id);
     changed = true;
@@ -136,6 +210,7 @@ export async function syncScores() {
     const events = await espnFetch(range);
     for (const ev of events) if (applyEvent(ev, 'espn').matched) matched += 1;
     log('scores', 'espn', true, `${events.length} events, ${matched} gematcht (${range})`);
+    classifyFinals();
     resolveBonusQuestions();
     return { provider: 'espn', matched };
   } catch (err) {
@@ -146,6 +221,7 @@ export async function syncScores() {
     const events = await tsdbFetch();
     for (const ev of events) if (applyEvent(ev, 'tsdb').matched) matched += 1;
     log('scores', 'tsdb', true, `${events.length} events, ${matched} gematcht (fallback)`);
+    classifyFinals();
     resolveBonusQuestions();
     return { provider: 'tsdb', matched };
   } catch (err) {
@@ -186,6 +262,7 @@ export async function syncFixtures() {
   } catch (err) {
     log('fixtures', 'espn', false, err.message);
   }
+  classifyFinals();
   resolveBonusQuestions();
   return { ok };
 }

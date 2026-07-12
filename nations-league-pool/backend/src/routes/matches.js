@@ -6,7 +6,7 @@ const router = Router();
 
 const MATCH_SELECT = `
   SELECT m.id, m.matchday, m.group_name, m.stage, m.kickoff_utc, m.kickoff_confirmed,
-         m.status, m.minute, m.home_score, m.away_score, m.result_source,
+         m.status, m.minute, m.home_score, m.away_score, m.winner_team_id, m.result_source,
          th.id AS home_team_id, th.code AS home_code, th.name_nl AS home_name, th.flag AS home_flag,
          ta.id AS away_team_id, ta.code AS away_code, ta.name_nl AS away_name, ta.flag AS away_flag
   FROM matches m

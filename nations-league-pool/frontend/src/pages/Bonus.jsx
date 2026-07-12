@@ -59,7 +59,7 @@ export default function Bonus() {
             )}
           </div>
 
-          {q.resolved && (
+          {q.resolved === 1 && (
             <div className="rounded-xl bg-white/[0.04] p-2 text-sm">
               Uitslag:{' '}
               <b>

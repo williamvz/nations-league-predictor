@@ -1,6 +1,7 @@
 import db from '../db/database.js';
 import { checkAchievements, checkMatchdayAchievements } from './achievements.js';
 import { broadcast } from './notify.js';
+import { sendPush } from './push.js';
 
 export const SCORING = { exact: 5, difference: 3, winner: 2 };
 
@@ -68,11 +69,9 @@ export function processMatchResult(matchId, { notify = true } = {}) {
   for (const p of predictions) checkAchievements(p.user_id);
 
   if (notify && !wasCalculated) {
-    broadcast(
-      'result',
-      `${match.home_flag} ${match.home_name} ${match.home_score} - ${match.away_score} ${match.away_name} ${match.away_flag}`,
-      'De punten zijn bijgewerkt. Bekijk de ranglijst!'
-    );
+    const title = `${match.home_flag} ${match.home_name} ${match.home_score} - ${match.away_score} ${match.away_name} ${match.away_flag}`;
+    broadcast('result', title, 'De punten zijn bijgewerkt. Bekijk de ranglijst!');
+    sendPush(null, { title, body: 'Eindstand — de punten zijn bijgewerkt 🏆' }).catch(() => {});
   }
 
   finalizeMatchdayIfComplete(match.matchday);
@@ -138,6 +137,10 @@ export function finalizeMatchdayIfComplete(matchday) {
       `Speelronde ${matchday} is afgelopen! 🏁`,
       `Dagwinnaar: ${user.display_name} met ${best.matchday_points} punten.`
     );
+    sendPush(null, {
+      title: `Speelronde ${matchday} is afgelopen! 🏁`,
+      body: `Dagwinnaar: ${user.display_name} met ${best.matchday_points} punten. Bekijk de nieuwe ranglijst!`,
+    }).catch(() => {});
   }
   return true;
 }

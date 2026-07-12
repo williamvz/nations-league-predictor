@@ -21,7 +21,10 @@ const bonusRoutes = (await import('./routes/bonus.js')).default;
 const achievementRoutes = (await import('./routes/achievements.js')).default;
 const notificationRoutes = (await import('./routes/notifications.js')).default;
 const adminRoutes = (await import('./routes/admin.js')).default;
+const pushRoutes = (await import('./routes/push.js')).default;
 const { startScheduler } = await import('./sync/scheduler.js');
+const { initPush } = await import('./services/push.js');
+initPush();
 
 const app = express();
 app.use(cors());
@@ -37,6 +40,7 @@ app.use('/api/bonus', bonusRoutes);
 app.use('/api/achievements', achievementRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/push', pushRoutes);
 
 app.get('/api/health', (req, res) => res.json({ ok: true, ts: new Date().toISOString() }));
 

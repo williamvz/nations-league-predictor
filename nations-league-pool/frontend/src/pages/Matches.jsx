@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { Spinner, Modal, LiveDot } from '../components/ui';
 import MatchCard from '../components/MatchCard';
-import { groupBy, fmtFull, fmtPoints } from '../utils/format';
+import { groupBy, fmtFull, fmtPoints, roundLabel, matchContext } from '../utils/format';
 
 const FILTERS = [
   { key: 'alle', label: 'Alle' },
@@ -51,7 +51,7 @@ export default function Matches() {
     ingevuld: matches.filter((m) => !m.is_locked && m.prediction).length,
     afgelopen: matches.filter((m) => m.status === 'finished').length,
   };
-  const byMatchday = groupBy(filtered, (m) => m.matchday);
+  const byRound = groupBy(filtered, roundLabel);
 
   return (
     <div className="space-y-5">
@@ -73,10 +73,10 @@ export default function Matches() {
         <p className="py-10 text-center text-emerald-50/40">Geen wedstrijden in deze categorie 🎉</p>
       )}
 
-      {[...byMatchday.entries()].map(([md, list]) => (
-        <section key={md} className="space-y-3">
+      {[...byRound.entries()].map(([label, list]) => (
+        <section key={label} className="space-y-3">
           <h2 className="sticky top-14 z-10 -mx-1 bg-pitch-950/90 px-1 py-1 font-bold text-emerald-50/70 backdrop-blur">
-            Speelronde {md}
+            {label}
           </h2>
           {list.map((m) => (
             <MatchCard key={m.id} match={m} onSaved={load} onOpenDetail={(x) => navigate(`/wedstrijden/${x.id}`)} />
@@ -122,7 +122,7 @@ function MatchDetail({ id, onClose }) {
             ) : (
               <div className="text-emerald-50/60">{fmtFull(m.kickoff_utc)}</div>
             )}
-            <div className="mt-1 text-xs text-emerald-50/40">Groep {m.group_name} · Speelronde {m.matchday}</div>
+            <div className="mt-1 text-xs text-emerald-50/40">{matchContext(m)}</div>
           </div>
 
           {m.goals?.length > 0 && (

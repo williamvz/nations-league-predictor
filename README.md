@@ -71,7 +71,17 @@ node-cron (in-process, Europe/Amsterdam)
 | Correct winner (or draw) | **2** |
 | 🃏 Joker (one per matchday) | **×2** |
 
-Bonus: group winners (4 × 5 pts), league-phase top scorer (5 pts), Netherlands' group-stage points total (5 pts, ±1 → 2 pts). Knockout stages (March/June 2027) use multipliers ×1.5–×2.5 and can be added when the time comes.
+Knockout multipliers: quarterfinal ×1.5, semifinal ×2, third place ×2, final ×2.5.
+
+Bonus: group winners (4 × 5 pts), league-phase top scorer (5 pts), Netherlands' group-stage points total (5 pts, ±1 → 2 pts), and the Nations League champion (10 pts, resolved after the June 2027 final). **There are no prizes — you play for eternal glory only.**
+
+The knockout rounds (quarterfinals March 2027, Final Four June 2027) are **created automatically** once the draw is made and the fixtures appear at the data providers; players get a notification that new matches are open for predictions. Penalty-shootout winners are captured automatically for matches level after 90 minutes.
+
+## 🔔 Player notifications
+
+- **Web push** (opt-in per device via Profiel): results, day winners, matchday reminders and last-call alerts for unfilled predictions. VAPID keys are auto-generated at first boot — zero configuration. Requires HTTPS (or the HA ingress URL).
+- **Matchday reminders**: ~24h before each matchday (everyone) and ~3h before (only players with gaps). The admin also gets an HA summary of who hasn't filled in.
+- **Share cards**: the leaderboard exports as a WhatsApp-ready image via the native share sheet (📤 button).
 
 ## 🧱 Stack & repo layout
 

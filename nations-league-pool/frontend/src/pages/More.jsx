@@ -56,6 +56,7 @@ export default function More() {
       <div className="pt-4 text-center text-xs text-emerald-50/30">
         <div className="mb-1 font-semibold">Puntentelling</div>
         <div>Exacte uitslag 5 · winnaar + doelsaldo 3 · winnaar 2 · 🃏 joker ×2</div>
+        <div>Knock-outfase: kwartfinale ×1,5 · halve finale ×2 · finale ×2,5</div>
         <div className="mt-2">Uitslagen, stand en topscorers worden automatisch bijgewerkt ⚙️</div>
       </div>
     </div>

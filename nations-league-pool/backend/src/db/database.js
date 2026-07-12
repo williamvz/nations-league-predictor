@@ -151,6 +151,14 @@ CREATE TABLE IF NOT EXISTS notification_reads (
   PRIMARY KEY (user_id, notification_id)
 );
 
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  endpoint TEXT NOT NULL UNIQUE,
+  keys_json TEXT NOT NULL,                   -- {p256dh, auth}
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS sync_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   ts TEXT NOT NULL DEFAULT (datetime('now')),
@@ -179,6 +187,12 @@ if (!userCols.includes('status')) {
 const notifCols = db.prepare("PRAGMA table_info(notifications)").all().map((c) => c.name);
 if (!notifCols.includes('meta')) {
   db.exec('ALTER TABLE notifications ADD COLUMN meta TEXT');
+}
+const matchCols = db.prepare("PRAGMA table_info(matches)").all().map((c) => c.name);
+if (!matchCols.includes('winner_team_id')) {
+  // knockout matches can end level after 90 minutes; the shootout/extra-time
+  // winner decides who advances (and the champion bonus question)
+  db.exec('ALTER TABLE matches ADD COLUMN winner_team_id INTEGER REFERENCES teams(id)');
 }
 
 export function getSetting(key, fallback = null) {

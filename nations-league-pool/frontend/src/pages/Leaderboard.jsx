@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { Spinner, Avatar, LiveDot, Modal } from '../components/ui';
 import { fmtPoints } from '../utils/format';
+import { shareLeaderboardCard } from '../utils/shareCard';
 
 function MovementArrow({ rank, prevRank }) {
   if (prevRank == null || prevRank === rank) return <span className="w-4 text-emerald-50/20">·</span>;
@@ -31,15 +32,29 @@ export default function Leaderboard() {
   if (!data) return <Spinner />;
   const rows = data.leaderboard;
 
+  async function share() {
+    const lastMd = history?.length ? Math.max(...history.map((h) => h.matchday)) : null;
+    await shareLeaderboardCard({
+      rows,
+      isLive: data.is_live,
+      subtitle: data.is_live ? 'Live tussenstand' : lastMd ? `Stand na speelronde ${lastMd}` : 'De stand',
+    });
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-black">Ranglijst</h1>
-        {data.is_live && (
-          <span className="flex items-center gap-2 text-sm text-red-300">
-            <LiveDot /> incl. live-punten
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          {data.is_live && (
+            <span className="flex items-center gap-2 text-sm text-red-300">
+              <LiveDot /> incl. live-punten
+            </span>
+          )}
+          <button className="btn-ghost !px-3 !py-1.5 text-sm" onClick={share} title="Deel als afbeelding">
+            📤 Deel
+          </button>
+        </div>
       </div>
 
       <div className="card divide-y divide-white/5">

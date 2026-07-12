@@ -266,6 +266,8 @@ function MatchesTab() {
 function EditResult({ match, onDone, onError }) {
   const [home, setHome] = useState(match.home_score ?? 0);
   const [away, setAway] = useState(match.away_score ?? 0);
+  const [winner, setWinner] = useState(match.winner_team_id ?? '');
+  const needsWinner = match.stage !== 'league' && home === away;
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-center gap-4">
@@ -273,11 +275,22 @@ function EditResult({ match, onDone, onError }) {
         <span className="font-bold">–</span>
         <input type="number" min={0} max={20} className="input w-20 text-center text-xl" value={away} onChange={(e) => setAway(Number(e.target.value))} />
       </div>
+      {needsWinner && (
+        <label className="block text-sm">
+          <span className="mb-1 block text-emerald-50/60">Wie gaat er door? (verlenging/strafschoppen)</span>
+          <select className="input" value={winner} onChange={(e) => setWinner(Number(e.target.value))}>
+            <option value="">— kies —</option>
+            <option value={match.home_team_id}>{match.home_flag} {match.home_name}</option>
+            <option value={match.away_team_id}>{match.away_flag} {match.away_name}</option>
+          </select>
+        </label>
+      )}
       <button
         className="btn-primary w-full"
+        disabled={needsWinner && !winner}
         onClick={async () => {
           try {
-            await api.admin.setResult(match.id, home, away);
+            await api.admin.setResult(match.id, home, away, needsWinner ? winner : undefined);
             onDone();
           } catch (err) {
             onError(err.message);

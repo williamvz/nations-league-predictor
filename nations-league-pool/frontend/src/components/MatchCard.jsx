@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { api } from '../services/api';
-import { fmtDay, fmtTime, fmtPoints } from '../utils/format';
+import { fmtDay, fmtTime, fmtPoints, matchContext } from '../utils/format';
 import { Countdown, LiveDot } from './ui';
 
 function Stepper({ value, onChange, disabled }) {
@@ -70,8 +70,8 @@ export default function MatchCard({ match, onSaved, onOpenDetail }) {
   return (
     <div className={`card p-4 ${live ? 'ring-1 ring-red-500/40' : ''}`}>
       <div className="mb-2 flex items-center justify-between text-xs text-emerald-50/50">
-        <span>
-          Groep {match.group_name} · Speelronde {match.matchday}
+        <span className={match.stage !== 'league' ? 'font-semibold text-oranje-300/80' : ''}>
+          {matchContext(match)}
         </span>
         <span className="flex items-center gap-2">
           {live && <LiveDot />}
@@ -90,6 +90,11 @@ export default function MatchCard({ match, onSaved, onOpenDetail }) {
           {finished || live ? (
             <span className={`text-2xl font-black tabular-nums ${live ? 'text-red-400' : ''}`}>
               {match.home_score}–{match.away_score}
+              {finished && match.winner_team_id && match.home_score === match.away_score && (
+                <span className="block text-[10px] font-semibold text-emerald-50/50">
+                  {match.winner_team_id === match.home_team_id ? match.home_name : match.away_name} wint na strafschoppen
+                </span>
+              )}
             </span>
           ) : (
             <span className="text-lg font-bold text-emerald-50/30">

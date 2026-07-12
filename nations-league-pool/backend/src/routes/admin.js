@@ -120,11 +120,19 @@ router.put('/matches/:id/result', (req, res) => {
   if (!Number.isInteger(home) || !Number.isInteger(away) || home < 0 || away < 0) {
     return res.status(400).json({ error: 'Ongeldige uitslag' });
   }
+  // knockout matches that end level need a winner (extra time / penalties)
+  let winnerId = null;
+  if (match.stage !== 'league' && home === away) {
+    winnerId = Number(req.body.winner_team_id);
+    if (![match.home_team_id, match.away_team_id].includes(winnerId)) {
+      return res.status(400).json({ error: 'Kies bij een gelijkspel in de knock-outfase wie er doorgaat (strafschoppen)' });
+    }
+  }
   db.prepare(`
     UPDATE matches SET status = 'finished', home_score = ?, away_score = ?, minute = NULL,
-      result_source = 'manual', points_calculated = 0, updated_at = datetime('now')
+      winner_team_id = ?, result_source = 'manual', points_calculated = 0, updated_at = datetime('now')
     WHERE id = ?
-  `).run(home, away, matchId);
+  `).run(home, away, winnerId, matchId);
   processMatchResult(matchId);
   resolveBonusQuestions();
   res.json({ ok: true });

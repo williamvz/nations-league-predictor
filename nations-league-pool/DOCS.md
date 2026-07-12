@@ -53,4 +53,16 @@ Alle data staat in één SQLite-bestand op `/data/nlpool.db` en blijft bewaard b
 | Juiste winnaar (of gelijkspel) | **2** |
 | 🃏 Joker (1 per speelronde) | **×2** |
 
-Bonusvragen: groepswinnaars (4 × 5 pt), topscorer (5 pt), aantal punten van Nederland (5 pt, ±1 = 2 pt).
+Knock-outfase: kwartfinale ×1,5 · halve finale ×2 · troostfinale ×2 · finale ×2,5.
+
+Bonusvragen: groepswinnaars (4 × 5 pt), topscorer (5 pt), aantal punten van Nederland (5 pt, ±1 = 2 pt), Nations League-kampioen (10 pt). Er valt niets te winnen behalve **eeuwige roem**. 😤
+
+## Volledige toernooi
+
+De pool loopt door tot en met de finale in juni 2027. De kwartfinales (maart 2027, heen + terug) en de Final Four (juni 2027) worden **automatisch toegevoegd** zodra de loting bekend is en de wedstrijden bij de databronnen verschijnen — iedereen krijgt een melding dat er nieuwe wedstrijden te voorspellen zijn. Eindigt een knock-outwedstrijd gelijk, dan wordt de strafschoppenwinnaar automatisch geregistreerd (punten tellen over de uitslag na 90 minuten).
+
+## Meldingen naar spelers
+
+- **Pushmeldingen** (aan te zetten via Profiel, per apparaat): uitslagen, dagwinnaar, speelronde-herinneringen en "laatste kans"-alerts als je nog niet alles hebt ingevuld. Werkt op telefoon en desktop zodra de app via HTTPS of Home Assistant wordt geopend; de sleutels worden automatisch gegenereerd, er is niets te configureren.
+- **Speelronde-herinneringen**: ±24 uur vóór elke speelronde (iedereen) en ±3 uur ervoor (alleen wie nog gaten heeft). Jij krijgt via Home Assistant een overzichtje van wie er nog niet klaar is.
+- **Deelknop** op de ranglijst: maakt een deelbare afbeelding van de stand voor in de familie-app. 📤

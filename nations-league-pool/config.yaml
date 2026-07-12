@@ -1,5 +1,5 @@
 name: Nations League Pool
-version: "1.0.0"
+version: "1.1.0"
 slug: nations_league_pool
 description: Voorspellingenpool voor de UEFA Nations League 2026/27 — uitslagen, stand en topscorers worden automatisch bijgewerkt
 url: https://github.com/williamvz/nations-league-predictor

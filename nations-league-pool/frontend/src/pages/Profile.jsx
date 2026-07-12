@@ -104,10 +104,95 @@ export default function Profile() {
         </div>
       </section>
 
+      <PushSection />
+
       <PasswordSection />
 
       <button className="btn-ghost w-full" onClick={logout}>Uitloggen</button>
     </div>
+  );
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = window.atob(base64);
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+}
+
+function PushSection() {
+  const supported = 'serviceWorker' in navigator && 'PushManager' in window && window.isSecureContext;
+  const [subscribed, setSubscribed] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  useEffect(() => {
+    if (!supported) return;
+    navigator.serviceWorker.ready
+      .then((reg) => reg.pushManager.getSubscription())
+      .then((sub) => setSubscribed(!!sub))
+      .catch(() => {});
+  }, [supported]);
+
+  if (!supported) {
+    return (
+      <section className="card p-4">
+        <h2 className="font-bold">Pushmeldingen 🔕</h2>
+        <p className="mt-1 text-sm text-emerald-50/50">
+          Pushmeldingen vereisen een beveiligde verbinding (HTTPS of via Home Assistant).
+          {typeof navigator !== 'undefined' && !window.isSecureContext && ' Open de app via het HA-menu of een https-adres om ze aan te zetten.'}
+        </p>
+      </section>
+    );
+  }
+
+  async function toggle() {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      if (subscribed) {
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          await api.pushUnsubscribe(sub.endpoint);
+          await sub.unsubscribe();
+        }
+        setSubscribed(false);
+        setMsg('Pushmeldingen uitgezet op dit apparaat.');
+      } else {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          setMsg('Meldingen zijn geweigerd in je browserinstellingen.');
+          return;
+        }
+        const { key } = await api.pushKey();
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(key),
+        });
+        await api.pushSubscribe(sub.toJSON());
+        setSubscribed(true);
+        await api.pushTest();
+        setMsg('Aangezet! Er komt zo een testmelding binnen 🎉');
+      }
+    } catch (err) {
+      setMsg(`Dat lukte niet: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="card space-y-2 p-4">
+      <h2 className="font-bold">Pushmeldingen {subscribed ? '🔔' : '🔕'}</h2>
+      <p className="text-sm text-emerald-50/50">
+        Uitslagen, speelronde-herinneringen en de dagwinnaar direct op dit apparaat — ook als de app dicht is.
+      </p>
+      {msg && <div className="text-sm text-emerald-300">{msg}</div>}
+      <button className={subscribed ? 'btn-ghost w-full' : 'btn-primary w-full'} onClick={toggle} disabled={busy}>
+        {busy ? 'Even geduld…' : subscribed ? 'Zet uit op dit apparaat' : 'Zet aan op dit apparaat'}
+      </button>
+    </section>
   );
 }
 

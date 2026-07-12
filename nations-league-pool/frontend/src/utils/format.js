@@ -32,6 +32,27 @@ export function groupBy(arr, keyFn) {
   return out;
 }
 
+export const STAGE_META = {
+  quarterfinal: { label: 'Kwartfinale', multiplier: '×1,5' },
+  semifinal: { label: 'Halve finale', multiplier: '×2' },
+  third_place: { label: 'Troostfinale', multiplier: '×2' },
+  final: { label: 'Finale', multiplier: '×2,5' },
+};
+
+/** Section heading a match belongs under in the match list. */
+export function roundLabel(m) {
+  if (m.stage === 'league') return `Speelronde ${m.matchday}`;
+  if (m.stage === 'quarterfinal') return m.matchday === 7 ? 'Kwartfinales · heenduels' : 'Kwartfinales · returns';
+  return 'Final Four · juni 2027';
+}
+
+/** Compact context line on a match card. */
+export function matchContext(m) {
+  if (m.stage === 'league') return `Groep ${m.group_name} · Speelronde ${m.matchday}`;
+  const meta = STAGE_META[m.stage];
+  return meta ? `🏆 ${meta.label} · punten ${meta.multiplier}` : 'Knock-outfase';
+}
+
 export function countdownParts(iso) {
   const ms = new Date(iso).getTime() - Date.now();
   if (ms <= 0) return null;

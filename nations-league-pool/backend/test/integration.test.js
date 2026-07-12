@@ -23,7 +23,7 @@ test('seed is idempotent', () => {
   seed();
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM teams').get().n, 16);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM matches').get().n, 48);
-  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM bonus_questions').get().n, 6);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM bonus_questions').get().n, 7);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_admin = 1').get().n, 1);
 });
 

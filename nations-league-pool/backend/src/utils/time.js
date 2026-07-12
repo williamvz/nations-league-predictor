@@ -23,6 +23,15 @@ export function amsterdamToUtc(dateStr, timeStr) {
   return new Date(guess.getTime() - offset).toISOString();
 }
 
+const displayFmt = new Intl.DateTimeFormat('nl-NL', {
+  timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
+});
+
+/** Human-readable Dutch date/time, e.g. "donderdag 24 september om 20:45". */
+export function fmtAmsterdam(isoUtc) {
+  return displayFmt.format(new Date(isoUtc)).replace(' om ', ' om ');
+}
+
 export function nowUtc() {
   return new Date().toISOString();
 }

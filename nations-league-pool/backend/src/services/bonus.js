@@ -12,6 +12,7 @@ export function resolveBonusQuestions() {
   resolveGroupWinners();
   resolveNedPoints();
   resolveTopScorer();
+  resolveChampion();
 }
 
 function groupComplete(group) {
@@ -84,6 +85,27 @@ function resolveNedPoints() {
   });
   broadcast('bonus', `Nederland sluit de groepsfase af met ${row.points} punten 🇳🇱`,
     'De bonusvraag is uitgekeerd. Bekijk de ranglijst!');
+}
+
+function resolveChampion() {
+  const q = db.prepare("SELECT * FROM bonus_questions WHERE question_key = 'champion' AND resolved = 0").get();
+  if (!q) return;
+  const final = db.prepare("SELECT * FROM matches WHERE stage = 'final' AND status = 'finished'").get();
+  if (!final) return;
+
+  let winnerId = final.winner_team_id;
+  if (!winnerId && final.home_score !== final.away_score) {
+    winnerId = final.home_score > final.away_score ? final.home_team_id : final.away_team_id;
+  }
+  if (!winnerId) return; // level after 90 min and no shootout winner known yet
+
+  const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(winnerId);
+  db.prepare('UPDATE bonus_questions SET correct_team_id = ? WHERE id = ?').run(winnerId, q.id);
+  const winners = award(q, (a) => (a.answer_team_id === winnerId ? q.points : 0));
+  broadcast('bonus', `${team.flag} ${team.name_nl} wint de Nations League! 🏆🎉`,
+    winners.length
+      ? `${winners.length} speler(s) hadden de kampioen goed voorspeld (+${q.points} punten)!`
+      : 'Niemand had de kampioen goed voorspeld.');
 }
 
 function resolveTopScorer() {

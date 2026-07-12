@@ -78,6 +78,11 @@ export const api = {
   unseenAchievements: () => request('/achievements/unseen'),
   markAchievementsSeen: () => request('/achievements/seen', { method: 'POST' }),
 
+  pushKey: () => request('/push/key'),
+  pushSubscribe: (subscription) => request('/push/subscribe', { method: 'POST', body: { subscription } }),
+  pushUnsubscribe: (endpoint) => request('/push/unsubscribe', { method: 'POST', body: { endpoint } }),
+  pushTest: () => request('/push/test', { method: 'POST' }),
+
   notifications: () => request('/notifications'),
   markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'PUT' }),
   markAllNotificationsRead: () => request('/notifications/read-all', { method: 'PUT' }),
@@ -90,8 +95,8 @@ export const api = {
     rejectUser: (id) => request(`/admin/users/${id}/reject`, { method: 'POST' }),
     updateUser: (id, body) => request(`/admin/users/${id}`, { method: 'PUT', body }),
     deleteUser: (id) => request(`/admin/users/${id}`, { method: 'DELETE' }),
-    setResult: (id, home_score, away_score) =>
-      request(`/admin/matches/${id}/result`, { method: 'PUT', body: { home_score, away_score } }),
+    setResult: (id, home_score, away_score, winner_team_id) =>
+      request(`/admin/matches/${id}/result`, { method: 'PUT', body: { home_score, away_score, winner_team_id } }),
     resetMatch: (id) => request(`/admin/matches/${id}/reset`, { method: 'PUT' }),
     syncLog: () => request('/admin/sync/log'),
     runSync: () => request('/admin/sync/run', { method: 'POST' }),

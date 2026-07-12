@@ -51,6 +51,8 @@ export async function fetchEvents(dates) {
       providerId: ev.id,
       homeName: home.team?.displayName || home.team?.name,
       awayName: away.team?.displayName || away.team?.name,
+      // set on knockout matches decided after extra time / penalties
+      winnerName: home.winner === true ? home.team?.displayName : away.winner === true ? away.team?.displayName : null,
       homeScore: home.score != null ? Number(home.score) : null,
       awayScore: away.score != null ? Number(away.score) : null,
       status,

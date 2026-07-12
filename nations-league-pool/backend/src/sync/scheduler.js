@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 import { syncScores, syncFixtures, inLiveWindow, syncEnabled } from './engine.js';
+import { checkMatchdayReminders } from '../services/reminders.js';
 
 // The whole point of this app: nobody has to enter anything by hand.
 //  - every 2 min *only* while a match is live or about to start: live scores
@@ -22,6 +23,15 @@ export function startScheduler() {
     await guard('daily', syncFixtures);
   }, { timezone: 'Europe/Amsterdam' });
 
+  // matchday reminders (24h + 3h before first kickoff); cheap DB check
+  cron.schedule('*/15 * * * *', () => {
+    try {
+      checkMatchdayReminders();
+    } catch (err) {
+      console.error('⚠️ [scheduler:reminders]', err.message);
+    }
+  });
+
   setTimeout(() => {
     guard('boot', async () => {
       await syncFixtures();
@@ -29,7 +39,7 @@ export function startScheduler() {
     });
   }, 10_000);
 
-  console.log('⏰ Sync-scheduler actief (live: 2 min, sweep: 20 min, fixtures: dagelijks 05:30)');
+  console.log('⏰ Scheduler actief (live: 2 min, sweep: 20 min, fixtures: 05:30, reminders: 15 min)');
 }
 
 let running = false;

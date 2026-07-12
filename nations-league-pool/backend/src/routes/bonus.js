@@ -22,8 +22,10 @@ router.get('/', (req, res) => {
 
   for (const q of questions) {
     q.is_locked = new Date(q.deadline_utc).getTime() <= Date.now();
-    if (q.answer_type === 'team' && q.team_group) {
-      q.choices = db.prepare('SELECT id, name_nl, flag FROM teams WHERE group_name = ? ORDER BY name_nl').all(q.team_group);
+    if (q.answer_type === 'team') {
+      q.choices = q.team_group
+        ? db.prepare('SELECT id, name_nl, flag FROM teams WHERE group_name = ? ORDER BY name_nl').all(q.team_group)
+        : db.prepare('SELECT id, name_nl, flag FROM teams ORDER BY name_nl').all();
     }
     if (q.correct_text) {
       try { q.correct_names = JSON.parse(q.correct_text); } catch { q.correct_names = [q.correct_text]; }
