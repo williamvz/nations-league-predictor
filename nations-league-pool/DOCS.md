@@ -54,7 +54,3 @@ Alle data staat in één SQLite-bestand op `/data/nlpool.db` en blijft bewaard b
 | 🃏 Joker (1 per speelronde) | **×2** |
 
 Bonusvragen: groepswinnaars (4 × 5 pt), topscorer (5 pt), aantal punten van Nederland (5 pt, ±1 = 2 pt).
-
-## Prijzenpot
-
-Stel onder **Beheer → Instellingen → Prijzenpot** in wat er te winnen valt (vrije tekst: "€ 50", "kratje bier", "wisselbeker") — eerste/tweede/derde prijs, een 🏮 rode lantaarn voor de laatste plaats en optioneel de inleg per speler. Spelers zien de pot bovenaan de ranglijst en de prijzen verschijnen als badge bij de betreffende posities (alleen bij een unieke stand — bij een gelijke stand blijft de rij neutraal).

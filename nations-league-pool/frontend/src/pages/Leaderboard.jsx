@@ -30,22 +30,6 @@ export default function Leaderboard() {
 
   if (!data) return <Spinner />;
   const rows = data.leaderboard;
-  const prizes = data.prizes || {};
-  const hasPrizes = prizes.first || prizes.second || prizes.third || prizes.last;
-  // a prize chip is only meaningful on a rank held by exactly one player —
-  // with ties (like everyone on 0 points before matchday 1) the banner above
-  // says what's at stake and the rows stay clean
-  const rankCounts = rows.reduce((acc, r) => acc.set(r.rank, (acc.get(r.rank) || 0) + 1), new Map());
-  const seasonStarted = rows.some((r) => r.total_points > 0 || r.live_points > 0);
-  const prizeForRank = (rank) => {
-    if (!seasonStarted || rankCounts.get(rank) !== 1) return null;
-    if (rank === 1) return prizes.first;
-    if (rank === 2) return prizes.second;
-    if (rank === 3) return prizes.third;
-    return null;
-  };
-  const lastRow = rows[rows.length - 1];
-  const lastRank = seasonStarted && rows.length > 3 && rankCounts.get(lastRow.rank) === 1 ? lastRow.rank : null;
 
   return (
     <div className="space-y-5">
@@ -57,21 +41,6 @@ export default function Leaderboard() {
           </span>
         )}
       </div>
-
-      {hasPrizes && (
-        <div className="card border-oranje-500/30 bg-gradient-to-r from-oranje-500/10 to-transparent p-4">
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="font-bold text-oranje-300">💰 Er valt wat te winnen!</h2>
-            {prizes.entry_fee && <span className="chip bg-white/5 text-emerald-50/60">inleg: {prizes.entry_fee}</span>}
-          </div>
-          <div className="flex flex-wrap gap-2 text-sm">
-            {prizes.first && <span className="chip bg-yellow-500/15 text-yellow-300">🥇 {prizes.first}</span>}
-            {prizes.second && <span className="chip bg-slate-400/15 text-slate-300">🥈 {prizes.second}</span>}
-            {prizes.third && <span className="chip bg-amber-700/20 text-amber-500">🥉 {prizes.third}</span>}
-            {prizes.last && <span className="chip bg-red-500/10 text-red-300">🏮 Rode lantaarn: {prizes.last}</span>}
-          </div>
-        </div>
-      )}
 
       <div className="card divide-y divide-white/5">
         {rows.map((r) => (
@@ -90,15 +59,9 @@ export default function Leaderboard() {
                 {r.display_name} {r.favorite_flag && <span className="text-sm">{r.favorite_flag}</span>}
                 {r.user_id === user.id && <span className="ml-1 text-xs text-oranje-400">(jij)</span>}
               </div>
-              <div className="truncate text-xs text-emerald-50/40">
+              <div className="text-xs text-emerald-50/40">
                 {r.exact}× exact · {r.correct}× goed · {r.filled} ingevuld
               </div>
-              {prizeForRank(r.rank) && (
-                <div className="mt-0.5 text-xs font-semibold text-oranje-300">💰 {prizeForRank(r.rank)}</div>
-              )}
-              {prizes.last && lastRank && r.rank === lastRank && !prizeForRank(r.rank) && (
-                <div className="mt-0.5 text-xs font-semibold text-red-300">🏮 {prizes.last}</div>
-              )}
             </div>
             {data.is_live && r.live_points > 0 && (
               <span className="chip animate-pulse-live bg-red-500/15 text-red-300">+{fmtPoints(r.live_points)}</span>

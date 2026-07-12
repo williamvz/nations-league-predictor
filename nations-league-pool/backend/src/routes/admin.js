@@ -30,13 +30,6 @@ router.get('/dashboard', (req, res) => {
     next_matches: nextMatches, last_sync: lastSync || null,
     sync_enabled: getSetting('sync_enabled', '1') === '1',
     invite_code: getSetting('invite_code', process.env.INVITE_CODE || ''),
-    prizes: {
-      first: getSetting('prize_first', ''),
-      second: getSetting('prize_second', ''),
-      third: getSetting('prize_third', ''),
-      last: getSetting('prize_last', ''),
-      entry_fee: getSetting('entry_fee', ''),
-    },
   });
 });
 
@@ -182,14 +175,9 @@ router.post('/sync/run', async (req, res) => {
   res.json({ fixtures, scores });
 });
 
-const PRIZE_KEYS = ['prize_first', 'prize_second', 'prize_third', 'prize_last', 'entry_fee'];
-
 router.put('/settings', (req, res) => {
   if (req.body.sync_enabled !== undefined) setSetting('sync_enabled', req.body.sync_enabled ? '1' : '0');
   if (req.body.invite_code !== undefined) setSetting('invite_code', String(req.body.invite_code).trim());
-  for (const key of PRIZE_KEYS) {
-    if (req.body[key] !== undefined) setSetting(key, String(req.body[key]).trim().slice(0, 60));
-  }
   res.json({ ok: true });
 });
 
