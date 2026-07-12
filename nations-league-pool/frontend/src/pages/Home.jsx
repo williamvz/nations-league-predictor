@@ -90,6 +90,12 @@ export default function Home() {
           <h2 className="font-bold">🏆 Top 3 {leaderboard.is_live && <LiveDot />}</h2>
           <Link to="/ranglijst" className="text-sm text-oranje-400">Volledige ranglijst →</Link>
         </div>
+        {leaderboard.prizes?.first && (
+          <div className="mb-3 text-xs text-oranje-300">
+            💰 Hoofdprijs: <b>{leaderboard.prizes.first}</b>
+            {leaderboard.prizes.last && <> · 🏮 laatste plaats: {leaderboard.prizes.last}</>}
+          </div>
+        )}
         <div className="space-y-2">
           {leaderboard.leaderboard.slice(0, 3).map((r) => (
             <div key={r.user_id} className="flex items-center gap-3">

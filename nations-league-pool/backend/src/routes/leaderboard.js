@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import db from '../db/database.js';
+import db, { getSetting } from '../db/database.js';
 import { authenticate } from '../middleware/auth.js';
 import { calculatePoints, STAGE_MULTIPLIERS } from '../services/scoring.js';
 
@@ -77,7 +77,15 @@ router.get('/', (req, res) => {
     if (key !== prev) { rank = i + 1; prev = key; }
     return { ...r, rank, prev_rank: prevRanks.get(r.user_id) ?? null };
   });
-  res.json({ leaderboard: out, is_live: !!live });
+
+  const prizes = {
+    first: getSetting('prize_first', ''),
+    second: getSetting('prize_second', ''),
+    third: getSetting('prize_third', ''),
+    last: getSetting('prize_last', ''),
+    entry_fee: getSetting('entry_fee', ''),
+  };
+  res.json({ leaderboard: out, is_live: !!live, prizes });
 });
 
 router.get('/history', (req, res) => {

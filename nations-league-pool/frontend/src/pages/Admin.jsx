@@ -308,6 +308,7 @@ function EditResult({ match, onDone, onError }) {
 function SettingsTab() {
   const [dash, setDash] = useState(null);
   const [invite, setInvite] = useState('');
+  const [prizes, setPrizes] = useState({ first: '', second: '', third: '', last: '', entry_fee: '' });
   const [msgTitle, setMsgTitle] = useState('');
   const [msgBody, setMsgBody] = useState('');
   const [saved, setSaved] = useState(null);
@@ -316,6 +317,7 @@ function SettingsTab() {
     api.admin.dashboard().then((d) => {
       setDash(d);
       setInvite(d.invite_code || '');
+      if (d.prizes) setPrizes(d.prizes);
     }).catch(() => {});
   }, []);
 
@@ -354,6 +356,44 @@ function SettingsTab() {
           <input className="input" value={invite} onChange={(e) => setInvite(e.target.value)} placeholder="bijv. oranjeboven" />
           <button className="btn-primary" onClick={() => flash(() => api.admin.settings({ invite_code: invite }))}>Opslaan</button>
         </div>
+      </div>
+
+      <div className="card space-y-2 p-4">
+        <h2 className="font-bold">Prijzenpot 💰</h2>
+        <p className="text-xs text-emerald-50/40">
+          Vul in wat er te winnen valt — spelers zien dit op de ranglijst. Vrije tekst: "€ 50", "Kratje bier", "Wisselbeker"…
+        </p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="text-sm">
+            <span className="mb-1 block text-emerald-50/60">🥇 Eerste prijs</span>
+            <input className="input" value={prizes.first} onChange={(e) => setPrizes({ ...prizes, first: e.target.value })} placeholder="bijv. € 50" />
+          </label>
+          <label className="text-sm">
+            <span className="mb-1 block text-emerald-50/60">🥈 Tweede prijs</span>
+            <input className="input" value={prizes.second} onChange={(e) => setPrizes({ ...prizes, second: e.target.value })} placeholder="bijv. € 25" />
+          </label>
+          <label className="text-sm">
+            <span className="mb-1 block text-emerald-50/60">🥉 Derde prijs</span>
+            <input className="input" value={prizes.third} onChange={(e) => setPrizes({ ...prizes, third: e.target.value })} placeholder="bijv. € 10" />
+          </label>
+          <label className="text-sm">
+            <span className="mb-1 block text-emerald-50/60">🏮 Rode lantaarn (laatste plaats)</span>
+            <input className="input" value={prizes.last} onChange={(e) => setPrizes({ ...prizes, last: e.target.value })} placeholder="bijv. rondje appeltaart" />
+          </label>
+          <label className="text-sm sm:col-span-2">
+            <span className="mb-1 block text-emerald-50/60">Inleg per speler (optioneel)</span>
+            <input className="input" value={prizes.entry_fee} onChange={(e) => setPrizes({ ...prizes, entry_fee: e.target.value })} placeholder="bijv. € 5" />
+          </label>
+        </div>
+        <button
+          className="btn-primary"
+          onClick={() => flash(() => api.admin.settings({
+            prize_first: prizes.first, prize_second: prizes.second, prize_third: prizes.third,
+            prize_last: prizes.last, entry_fee: prizes.entry_fee,
+          }))}
+        >
+          Prijzen opslaan
+        </button>
       </div>
 
       <div className="card space-y-2 p-4">
