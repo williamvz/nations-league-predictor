@@ -1,0 +1,7 @@
+node_modules/
+*.log
+.env
+.DS_Store
+data/
+nations-league-pool/backend/public/
+dist/
