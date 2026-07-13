@@ -48,6 +48,76 @@ export function seed() {
 
   seedBonusQuestions();
   seedAdmin();
+  if (process.env.DEMO_MODE === '1') seedDemo();
+}
+
+/**
+ * Demo mode: compress the season so it plays out in ~1 hour and add bot
+ * players with predictions, so the leaderboard, notifications and bonus
+ * payouts can all be watched live before the real season starts.
+ */
+function seedDemo() {
+  if (getDemoFlag()) return;
+  const rows = db.prepare("SELECT id, matchday FROM matches WHERE stage = 'league' ORDER BY matchday, kickoff_utc, id").all();
+  const upd = db.prepare('UPDATE matches SET kickoff_utc = ?, kickoff_confirmed = 1 WHERE id = ?');
+  const perDay = new Map();
+  const tx = db.transaction(() => {
+    for (const m of rows) {
+      const idx = perDay.get(m.matchday) || 0;
+      perDay.set(m.matchday, idx + 1);
+      // matchday k starts k×DEMO_MATCHDAY_MINUTES from boot, matches staggered
+      const spacing = Number(process.env.DEMO_MATCHDAY_MINUTES || 6) * 60;
+      const t = new Date(Date.now() + (m.matchday * spacing + idx * spacing / 12) * 1000);
+      upd.run(t.toISOString(), m.id);
+    }
+    // bonus deadlines follow the compressed schedule
+    const firstKickoff = db.prepare("SELECT MIN(kickoff_utc) AS k FROM matches WHERE stage = 'league'").get().k;
+    const md3 = db.prepare('SELECT MIN(kickoff_utc) AS k FROM matches WHERE matchday = 3').get().k;
+    db.prepare("UPDATE bonus_questions SET deadline_utc = ? WHERE question_key != 'top_scorer'").run(firstKickoff);
+    db.prepare("UPDATE bonus_questions SET deadline_utc = ? WHERE question_key = 'top_scorer'").run(md3);
+  });
+  tx();
+
+  const bots = [
+    ['robo_pepijn', 'Robo-Pepijn 🤖', '🤖'],
+    ['bot_oma', 'Bot-Oma 👵', '🍀'],
+    ['kwakbot', 'KwakBot 3000', '🦆'],
+  ];
+  const bcryptHash = bcrypt.hashSync(crypto.randomBytes(12).toString('base64url'), 10);
+  const teams = db.prepare('SELECT id, group_name FROM teams').all();
+  const questions = db.prepare('SELECT * FROM bonus_questions').all();
+  for (const [username, displayName, avatar] of bots) {
+    const info = db.prepare(
+      'INSERT INTO users (username, display_name, password_hash, avatar) VALUES (?, ?, ?, ?)'
+    ).run(username, displayName, bcryptHash, avatar);
+    const botId = info.lastInsertRowid;
+    const rnd = () => Math.floor(Math.random() * 4);
+    const insPred = db.prepare('INSERT INTO predictions (user_id, match_id, home_goals, away_goals, is_joker) VALUES (?, ?, ?, ?, ?)');
+    const matches = db.prepare("SELECT id, matchday FROM matches WHERE stage = 'league'").all();
+    const jokerPerDay = new Set();
+    for (const m of matches) {
+      const joker = !jokerPerDay.has(m.matchday) && Math.random() < 0.2 ? 1 : 0;
+      if (joker) jokerPerDay.add(m.matchday);
+      insPred.run(botId, m.id, rnd(), rnd(), joker);
+    }
+    for (const q of questions) {
+      if (q.answer_type === 'team') {
+        const pool = q.team_group ? teams.filter((t) => t.group_name === q.team_group) : teams;
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        db.prepare('INSERT INTO bonus_answers (user_id, question_id, answer_team_id) VALUES (?, ?, ?)').run(botId, q.id, pick.id);
+      } else if (q.answer_type === 'number') {
+        db.prepare('INSERT INTO bonus_answers (user_id, question_id, answer_number) VALUES (?, ?, ?)').run(botId, q.id, 6 + Math.floor(Math.random() * 8));
+      } else {
+        db.prepare('INSERT INTO bonus_answers (user_id, question_id, answer_text) VALUES (?, ?, ?)').run(botId, q.id, 'Memphis Depay');
+      }
+    }
+  }
+  db.prepare("INSERT INTO settings (key, value) VALUES ('demo_seeded', '1')").run();
+  console.log('🧪 DEMO-MODUS: seizoen gecomprimeerd (~1 uur), 3 bots doen mee');
+}
+
+function getDemoFlag() {
+  return db.prepare("SELECT value FROM settings WHERE key = 'demo_seeded'").get();
 }
 
 function seedBonusQuestions() {

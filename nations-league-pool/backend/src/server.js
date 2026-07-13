@@ -51,6 +51,7 @@ app.get('/api/meta', async (req, res) => {
   res.json({
     registration_open: true,
     has_invite_code: Boolean(getSetting('invite_code', process.env.INVITE_CODE || '')),
+    demo_mode: process.env.DEMO_MODE === '1',
   });
 });
 

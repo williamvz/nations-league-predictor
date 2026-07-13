@@ -8,7 +8,19 @@ if [ -f /data/options.json ]; then
   ADMIN_PASSWORD=$(jq -r '.admin_password // ""' /data/options.json)
   INVITE_CODE=$(jq -r '.invite_code // ""' /data/options.json)
   HA_NOTIFY_SERVICE=$(jq -r '.ha_notify_service // ""' /data/options.json)
+  if [ "$(jq -r '.demo_mode // false' /data/options.json)" = "true" ]; then
+    DEMO_MODE=1
+  fi
   export DB_PATH=/data/nlpool.db
+fi
+
+if [ "${DEMO_MODE:-}" = "1" ]; then
+  # demo season runs against its own database; the real one stays untouched.
+  # a fresh demo starts on every restart while demo mode is on.
+  export DEMO_MODE=1
+  export DB_PATH=/data/nlpool-demo.db
+  rm -f /data/nlpool-demo.db /data/nlpool-demo.db-wal /data/nlpool-demo.db-shm
+  echo "🧪 DEMO-MODUS: gesimuleerd seizoen op ${DB_PATH} (echte database blijft ongemoeid)"
 fi
 
 if [ -z "${JWT_SECRET}" ]; then

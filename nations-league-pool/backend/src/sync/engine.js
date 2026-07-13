@@ -17,6 +17,20 @@ export function syncEnabled() {
   return getSetting('sync_enabled', '1') === '1';
 }
 
+export const DEMO_MODE = process.env.DEMO_MODE === '1';
+
+/** Demo mode: one pass over the built-in simulator instead of the network. */
+async function syncSimulated() {
+  const { fetchSimulatedEvents } = await import('./providers/simulator.js');
+  const events = fetchSimulatedEvents();
+  let matched = 0;
+  for (const ev of events) if (applyEvent(ev, 'sim', { updateKickoff: false }).matched) matched += 1;
+  if (matched > 0) log('scores', 'sim', true, `${events.length} gesimuleerde events, ${matched} verwerkt`);
+  classifyFinals();
+  resolveBonusQuestions();
+  return { provider: 'sim', matched };
+}
+
 /** Dates (YYYYMMDD, UTC-based with 1-day margin) that need score attention. */
 function datesNeedingScores() {
   const rows = db.prepare(`
@@ -62,14 +76,17 @@ function knockoutMatchday(stage, kickoffIso) {
 }
 
 function createKnockoutMatch(ev, provider, home, away) {
-  const stage = inferKnockoutStage(ev.kickoffIso);
+  // the demo simulator provides explicit stage/matchday (its kickoffs are
+  // time-compressed and fall outside the real 2027 windows)
+  const stage = ev.stage || inferKnockoutStage(ev.kickoffIso);
   if (!stage) return null;
+  const matchday = ev.matchday || knockoutMatchday(stage, ev.kickoffIso);
   let info;
   try {
     info = db.prepare(`
       INSERT INTO matches (matchday, group_name, stage, home_team_id, away_team_id, kickoff_utc, kickoff_confirmed)
       VALUES (?, 'KO', ?, ?, ?, ?, 1)
-    `).run(knockoutMatchday(stage, ev.kickoffIso), stage, home.id, away.id, ev.kickoffIso);
+    `).run(matchday, stage, home.id, away.id, ev.kickoffIso);
   } catch {
     // another provider already created this pairing (UNIQUE home/away/stage)
     return db.prepare('SELECT * FROM matches WHERE home_team_id = ? AND away_team_id = ? AND stage = ?')
@@ -201,6 +218,7 @@ export function recomputeScorers() {
  */
 export async function syncScores() {
   if (!syncEnabled()) return { skipped: true };
+  if (DEMO_MODE) return syncSimulated();
   const dates = datesNeedingScores();
   if (dates.length === 0) return { skipped: true, reason: 'geen wedstrijden in venster' };
 
@@ -237,6 +255,7 @@ export async function syncScores() {
  */
 export async function syncFixtures() {
   if (!syncEnabled()) return { skipped: true };
+  if (DEMO_MODE) return syncSimulated();
   let ok = false;
   try {
     const events = await tsdbFetch();

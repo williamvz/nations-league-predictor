@@ -8,6 +8,15 @@ import { checkMatchdayReminders } from '../services/reminders.js';
 //  - daily 05:30: fixture calendar sync + full catch-up
 //  - at boot: catch-up (the Pi may have been off during matches)
 export function startScheduler() {
+  if (process.env.DEMO_MODE === '1') {
+    // demo season: tick the simulator every 20 seconds for a lively ticker
+    cron.schedule('*/20 * * * * *', async () => {
+      await guard('demo-tick', syncScores);
+    });
+    console.log('🧪 Demo-scheduler actief (simulatie elke 20s)');
+    return;
+  }
+
   cron.schedule('*/2 * * * *', async () => {
     if (!syncEnabled() || !inLiveWindow()) return;
     await guard('live-poll', syncScores);

@@ -16,6 +16,7 @@ const NAV = [
 export default function Layout({ children }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [demoMode, setDemoMode] = useState(false);
   const [unread, setUnread] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -24,6 +25,10 @@ export default function Layout({ children }) {
   const seenRef = useRef(false);
 
   // poll notifications + fresh achievements (+ pending registrations for admins)
+  useEffect(() => {
+    api.meta().then((d) => setDemoMode(!!d.demo_mode)).catch(() => {});
+  }, []);
+
   useEffect(() => {
     let stop = false;
     async function poll() {
@@ -146,6 +151,12 @@ export default function Layout({ children }) {
           </div>
         </div>
       </header>
+
+      {demoMode && (
+        <div className="border-b border-purple-500/30 bg-purple-500/15 px-4 py-1.5 text-center text-xs font-semibold text-purple-200">
+          🧪 DEMO-MODUS — gesimuleerd oefenseizoen, telt nergens voor. Zet <code>demo_mode</code> uit voor het echte werk.
+        </div>
+      )}
 
       <main className="mx-auto max-w-5xl px-4 pb-28 pt-4 md:pb-8">{children}</main>
 
