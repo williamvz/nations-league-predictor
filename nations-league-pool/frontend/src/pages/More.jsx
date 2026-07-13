@@ -16,6 +16,7 @@ export default function More() {
   const items = [
     { to: '/bonus', icon: '⭐', label: 'Bonusvragen', sub: 'Groepswinnaars, topscorer & meer' },
     { to: '/prestaties', icon: '🏅', label: 'Prestaties', sub: 'Jouw ontgrendelde badges' },
+    { to: '/tv', icon: '📺', label: 'TV-modus', sub: 'Live wedstrijddag-dashboard voor het grote scherm' },
     { to: '/profiel', icon: '👤', label: 'Profiel', sub: 'Avatar, favoriet land, wachtwoord' },
   ];
   if (user?.is_admin === 1) {

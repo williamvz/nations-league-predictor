@@ -9,6 +9,32 @@ export function haAvailable() {
   return Boolean(process.env.SUPERVISOR_TOKEN);
 }
 
+/**
+ * Fire an event on the Home Assistant event bus (e.g. nlpool_goal), so the
+ * user can build automations — flash the lights orange when Nederland
+ * scores. Silent no-op outside HA.
+ */
+export async function fireHomeAssistantEvent(eventType, payload = {}) {
+  const token = process.env.SUPERVISOR_TOKEN;
+  if (!token) return false;
+  try {
+    const res = await fetch(`http://supervisor/core/api/events/${eventType}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) throw new Error(`HA antwoordde ${res.status}`);
+    return true;
+  } catch (err) {
+    console.error(`⚠️ HA-event ${eventType} mislukt:`, err.message);
+    return false;
+  }
+}
+
 export async function notifyHomeAssistant(title, message) {
   const token = process.env.SUPERVISOR_TOKEN;
   if (!token) return false;
