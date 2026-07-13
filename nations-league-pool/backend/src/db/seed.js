@@ -47,7 +47,7 @@ export function seed() {
   }
 
   seedBonusQuestions();
-  seedAdmin();
+  ensureAdmin();
   if (process.env.DEMO_MODE === '1') seedDemo();
 }
 
@@ -139,12 +139,46 @@ function seedBonusQuestions() {
   if (added > 0) console.log(`✅ ${added} bonusvra(a)g(en) toegevoegd`);
 }
 
-function seedAdmin() {
-  const count = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_admin = 1').get().n;
-  if (count > 0) return;
+/**
+ * The add-on configuration is the source of truth for the admin account:
+ *  - the user named `admin_username` (default 'admin') always exists, is an
+ *    admin and is active;
+ *  - while `admin_password` is set in the config it is enforced at every
+ *    start (config wins — this doubles as password recovery). Leave it empty
+ *    to manage the password in the app instead.
+ * Renaming `admin_username` later simply bootstraps an additional admin
+ * account; the old one can be demoted/removed in Beheer → Gebruikers.
+ */
+function ensureAdmin() {
+  const configured = (process.env.ADMIN_USERNAME || '').trim();
+  const username = configured || 'admin';
+  const configPassword = process.env.ADMIN_PASSWORD || '';
+  const existing = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
-  const username = process.env.ADMIN_USERNAME || 'william';
-  let password = process.env.ADMIN_PASSWORD;
+  // upgrade safety: an existing install already has its admin (whatever the
+  // name) — without an explicit admin_username we must not invent a second one
+  if (!existing && !configured) {
+    const admins = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_admin = 1').get().n;
+    if (admins > 0) return;
+  }
+
+  if (existing) {
+    if (!existing.is_admin || existing.status !== 'active') {
+      db.prepare("UPDATE users SET is_admin = 1, status = 'active' WHERE id = ?").run(existing.id);
+      console.log(`✅ '${username}' is (weer) beheerder`);
+    }
+    if (configPassword && !bcrypt.compareSync(configPassword, existing.password_hash)) {
+      db.prepare('UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ?')
+        .run(bcrypt.hashSync(configPassword, 10), existing.id);
+      db.prepare(
+        'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+      ).run(`tokens_valid_after_${existing.id}`, String(Math.floor(Date.now() / 1000)));
+      console.log(`🔑 Wachtwoord van '${username}' bijgewerkt vanuit de configuratie`);
+    }
+    return;
+  }
+
+  let password = configPassword;
   let generated = false;
   if (!password) {
     password = crypto.randomBytes(9).toString('base64url');

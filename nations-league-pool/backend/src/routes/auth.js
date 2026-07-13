@@ -85,7 +85,8 @@ router.get('/me', authenticate, (req, res) => {
 router.put('/me', authenticate, (req, res) => {
   const { avatar, display_name, favorite_team_id } = req.body;
   if (avatar !== undefined) {
-    db.prepare('UPDATE users SET avatar = ? WHERE id = ?').run(String(avatar).slice(0, 8), req.user.id);
+    // 20 UTF-16 units: enough for tag-sequence flags like 🏴󠁧󠁢󠁥󠁮󠁧󠁿 (England/Wales)
+    db.prepare('UPDATE users SET avatar = ? WHERE id = ?').run(String(avatar).slice(0, 20), req.user.id);
   }
   if (display_name !== undefined) {
     const name = sanitizeUsername(display_name);

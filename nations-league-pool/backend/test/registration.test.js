@@ -8,6 +8,7 @@ import os from 'node:os';
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'nlpool-reg-'));
 process.env.DB_PATH = path.join(tmp, 'test.db');
 process.env.JWT_SECRET = 'test-secret';
+process.env.ADMIN_USERNAME = 'william';
 process.env.ADMIN_PASSWORD = 'admin-pw-123';
 delete process.env.INVITE_CODE;
 

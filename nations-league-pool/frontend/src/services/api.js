@@ -43,6 +43,12 @@ async function request(path, { method = 'GET', body } = {}) {
   if (!res.ok) {
     throw new Error(data?.error || `Er ging iets mis (${res.status})`);
   }
+  // successful writes may unlock achievements or create notifications —
+  // let the layout refresh its bell/popup immediately instead of waiting
+  // for the next 60s poll
+  if (method !== 'GET' && !path.startsWith('/notifications') && !path.startsWith('/achievements')) {
+    window.dispatchEvent(new Event('nlpool:activity'));
+  }
   return data;
 }
 

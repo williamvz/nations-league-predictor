@@ -77,6 +77,23 @@ export default function Profile() {
               </button>
             ))}
           </div>
+          {teams.length > 0 && (
+            <>
+              <label className="mb-1 mt-3 block text-sm text-emerald-50/60">…of een landvlag</label>
+              <div className="flex flex-wrap gap-2">
+                {teams.map((t) => (
+                  <button
+                    key={t.team_id}
+                    title={t.name_nl}
+                    onClick={() => save({ avatar: t.flag })}
+                    className={`flex h-10 w-10 items-center justify-center rounded-full text-xl ${user.avatar === t.flag ? 'bg-oranje-500/30 ring-2 ring-oranje-500' : 'bg-white/5 hover:bg-white/10'}`}
+                  >
+                    {t.flag}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         <div>

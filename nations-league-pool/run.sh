@@ -5,6 +5,7 @@ set -e
 # container runs standalone (docker-compose) plain env vars are used instead.
 if [ -f /data/options.json ]; then
   JWT_SECRET=$(jq -r '.jwt_secret // ""' /data/options.json)
+  ADMIN_USERNAME=$(jq -r '.admin_username // ""' /data/options.json)
   ADMIN_PASSWORD=$(jq -r '.admin_password // ""' /data/options.json)
   INVITE_CODE=$(jq -r '.invite_code // ""' /data/options.json)
   HA_NOTIFY_SERVICE=$(jq -r '.ha_notify_service // ""' /data/options.json)
@@ -32,7 +33,7 @@ if [ -z "${JWT_SECRET}" ]; then
   exit 1
 fi
 
-export JWT_SECRET ADMIN_PASSWORD INVITE_CODE HA_NOTIFY_SERVICE
+export JWT_SECRET ADMIN_USERNAME ADMIN_PASSWORD INVITE_CODE HA_NOTIFY_SERVICE
 export PORT="${PORT:-8099}"
 export DB_PATH="${DB_PATH:-/data/nlpool.db}"
 

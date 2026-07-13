@@ -5,7 +5,7 @@ Voorspellingenpool voor de **UEFA Nations League 2026/27 (League A)** voor famil
 ## Installatie
 
 1. Zet bij **Configuratie** een `jwt_secret`: een lange willekeurige tekst (bijv. het resultaat van `openssl rand -hex 32`). Zonder dit geheim start de add-on niet.
-2. Optioneel: zet een `admin_password`. Laat je dit leeg, dan wordt er eenmalig een wachtwoord gegenereerd dat in het **Log** verschijnt.
+2. Kies een `admin_username` (standaard `admin`) en een `admin_password`. Zolang het wachtwoord in de configuratie staat is het **leidend**: bij elke start wordt het afgedwongen — handig als wachtwoordherstel. Laat je het leeg, dan wordt er eenmalig een wachtwoord gegenereerd dat in het **Log** verschijnt en beheer je het daarna in de app. Wijzig je later de `admin_username`, dan wordt dat account als extra beheerder aangemaakt (het oude kun je in de app aanpassen of verwijderen).
 3. Optioneel: zet een `invite_code`. Iedereen kan zich altijd aanmelden via de loginpagina — nieuwe accounts wachten op jouw goedkeuring in **Beheer → Gebruikers** (je krijgt een melding 🔔). Wie de uitnodigingscode invult slaat de wachtrij over en doet direct mee.
 4. Optioneel: zet `ha_notify_service` op een notify-service van Home Assistant, bijv. `notify.mobile_app_telefoon_van_william`. Nieuwe aanmeldingen komen dan als **pushmelding op je telefoon** binnen (via de HA companion-app). Laat je dit leeg, dan verschijnt er een melding in het Home Assistant-dashboard (persistent notification). De beschikbare services vind je in HA onder *Ontwikkelhulpmiddelen → Acties → notify.*
 5. Start de add-on.
