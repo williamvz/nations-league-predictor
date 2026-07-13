@@ -10,6 +10,16 @@ Voorspellingenpool voor de **UEFA Nations League 2026/27 (League A)** voor famil
 4. Optioneel: zet `ha_notify_service` op een notify-service van Home Assistant, bijv. `notify.mobile_app_telefoon_van_william`. Nieuwe aanmeldingen komen dan als **pushmelding op je telefoon** binnen (via de HA companion-app). Laat je dit leeg, dan verschijnt er een melding in het Home Assistant-dashboard (persistent notification). De beschikbare services vind je in HA onder *Ontwikkelhulpmiddelen → Acties → notify.*
 5. Start de add-on.
 
+## 🧪 Proefdraaien (demo-modus)
+
+Het echte seizoen begint pas op 24 september — maar je kunt het hele systeem nú testen. Zet in de configuratie `demo_mode: true` en herstart de add-on:
+
+- Er draait een **gesimuleerd seizoen in ±1 uur**: alle 48 groepswedstrijden gaan live (met tussenstanden, doelpuntenmakers en een tikkende klok), daarna volgen automatisch de kwartfinales en de Final Four t/m de kampioen.
+- **3 bots** doen mee zodat de ranglijst, dagwinnaars en bonusuitslagen leven. Doe zelf mee: voorspellingen invullen kan tot elke (gesimuleerde) aftrap.
+- Alles gedraagt zich als in het echt: meldingen, pushberichten, prestaties, deelknop — ideaal om ook de HA-koppeling en pushmeldingen op je telefoon te testen.
+- De demo gebruikt een **eigen database** (`nlpool-demo.db`); je echte pool blijft onaangeroerd. Bij elke herstart in demo-modus begint een vers seizoen.
+- Klaar? Zet `demo_mode: false` en herstart — de app pakt de echte database weer op. Een paarse banner in de app maakt altijd duidelijk dat je naar de demo kijkt.
+
 ## Aanmeldingen & goedkeuring
 
 Iedereen kan zich aanmelden via de loginpagina. Zo verloopt de communicatie:

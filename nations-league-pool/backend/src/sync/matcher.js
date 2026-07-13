@@ -30,9 +30,12 @@ export function findTeam(providerName) {
 
 /**
  * Find our match row for a provider event: by stored provider id first, then
- * by home/away team + kickoff within ±36h (fixtures can shift a day).
+ * by home/away team + kickoff within ±36h (fixtures can shift a day). When
+ * the event declares a stage, only match rows of that stage — two teams from
+ * the same group can meet again in the knockouts, and a time-compressed demo
+ * season puts those fixtures within the ±36h window of each other.
  */
-export function findMatch(provider, providerId, homeTeam, awayTeam, kickoffIso) {
+export function findMatch(provider, providerId, homeTeam, awayTeam, kickoffIso, stage = null) {
   if (providerId) {
     const byId = db.prepare(
       `SELECT * FROM matches WHERE json_extract(provider_ids, '$.' || ?) = ?`
@@ -44,7 +47,8 @@ export function findMatch(provider, providerId, homeTeam, awayTeam, kickoffIso) 
     SELECT * FROM matches
     WHERE home_team_id = ? AND away_team_id = ?
       AND abs(strftime('%s', kickoff_utc) - strftime('%s', ?)) < 36 * 3600
-  `).get(homeTeam.id, awayTeam.id, kickoffIso) || null;
+      AND (? IS NULL OR stage = ?)
+  `).get(homeTeam.id, awayTeam.id, kickoffIso, stage, stage) || null;
 }
 
 export function rememberProviderId(matchId, provider, providerId) {

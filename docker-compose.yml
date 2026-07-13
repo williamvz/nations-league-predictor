@@ -12,6 +12,7 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - ADMIN_USERNAME=${ADMIN_USERNAME:-william}
       - INVITE_CODE=${INVITE_CODE:-}
+      - DEMO_MODE=${DEMO_MODE:-}
       - TZ=Europe/Amsterdam
     volumes:
       - pool_data:/data

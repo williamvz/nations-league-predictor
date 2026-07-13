@@ -38,6 +38,12 @@ Copy the `nations-league-pool/` folder to your Pi's `/addons` share (Samba add-o
 
 Database lives at `/data/nlpool.db` inside the add-on → covered by normal HA backups.
 
+## 🧪 Demo mode — test the whole system before September
+
+Set `demo_mode: true` in the add-on config (or `DEMO_MODE=1` standalone) and restart: the app plays a **complete simulated season in ~1 hour** on a separate database (`nlpool-demo.db`) — live scores tick in, goals get scorers, standings update, the knockout bracket self-creates, bonus questions pay out and a champion is crowned, with 3 bot players keeping the leaderboard honest. Push/HA notifications fire for real, so you can verify your phone setup end to end. Flip it back off and the real database is exactly as you left it. A purple in-app banner marks demo state.
+
+The same simulation also runs headless in CI: `test/season.test.js` plays the full tournament through the sync engine and asserts points, standings, snapshots, scorers, bonus payouts, achievements and leaderboard consistency.
+
 ## 🐳 Standalone (without Home Assistant)
 
 ```bash
