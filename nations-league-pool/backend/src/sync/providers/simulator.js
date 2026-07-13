@@ -115,6 +115,10 @@ export function fetchSimulatedEvents() {
       status: finished ? 'finished' : 'live',
       minute: finished ? null : `${Math.max(1, Math.min(simMinute, 90))}'`,
       kickoffIso: m.kickoff_utc,
+      // always declare the stage so the matcher can never confuse this event
+      // with the same pairing in another stage (league vs knockout)
+      stage: m.stage,
+      matchday: m.matchday,
       winnerName,
       goals: visible.map((g) => ({
         player: g.player, teamName: g.teamName, minute: `${g.minute}'`,
@@ -146,8 +150,14 @@ function nextKnockoutEvents(teams) {
     stage, matchday, goals: [],
   });
 
+  // emit only fixtures that don't exist yet, so a partially created round
+  // repairs itself on the next tick instead of stalling
+  const exists = (homeId, awayId, stage) =>
+    db.prepare('SELECT 1 FROM matches WHERE home_team_id = ? AND away_team_id = ? AND stage = ?')
+      .get(homeId, awayId, stage);
+
   const qfs = db.prepare("SELECT * FROM matches WHERE stage = 'quarterfinal'").all();
-  if (qfs.length === 0) {
+  if (qfs.length < 8) {
     const winners = {}, runners = {};
     for (const g of ['A1', 'A2', 'A3', 'A4']) {
       const s = computeGroupStandings(g);
@@ -160,8 +170,8 @@ function nextKnockoutEvents(teams) {
     ];
     const events = [];
     pairs.forEach(([w, r], i) => {
-      events.push(mk(r, w, 'quarterfinal', 7, 2 + i)); // first leg: runner-up at home
-      events.push(mk(w, r, 'quarterfinal', 8, 2 + i + SIM_MATCH_MINUTES + 3));
+      if (!exists(r, w, 'quarterfinal')) events.push(mk(r, w, 'quarterfinal', 7, 2 + i)); // first leg: runner-up at home
+      if (!exists(w, r, 'quarterfinal')) events.push(mk(w, r, 'quarterfinal', 8, 2 + i + SIM_MATCH_MINUTES + 3));
     });
     return events;
   }
@@ -193,17 +203,16 @@ function nextKnockoutEvents(teams) {
   }
 
   const finalsExisting = db.prepare("SELECT * FROM matches WHERE stage IN ('semifinal', 'third_place', 'final')").all();
-  if (finalsExisting.length === 0 && advancers.length === 4) {
-    return [
-      mk(advancers[0], advancers[1], 'semifinal', 9, 2),
-      mk(advancers[2], advancers[3], 'semifinal', 9, 3),
-    ];
+  const semis = finalsExisting.filter((m) => m.stage === 'semifinal');
+  if (semis.length < 2 && advancers.length === 4) {
+    const events = [];
+    if (!exists(advancers[0], advancers[1], 'semifinal')) events.push(mk(advancers[0], advancers[1], 'semifinal', 9, 2));
+    if (!exists(advancers[2], advancers[3], 'semifinal')) events.push(mk(advancers[2], advancers[3], 'semifinal', 9, 3));
+    return events;
   }
 
-  const semis = finalsExisting.filter((m) => m.stage === 'semifinal');
   const semisDone = semis.length === 2 && semis.every((m) => m.status === 'finished');
-  const hasFinal = finalsExisting.some((m) => m.stage === 'final' || m.stage === 'third_place');
-  if (semisDone && !hasFinal) {
+  if (semisDone) {
     const result = (m) => {
       if (m.home_score !== m.away_score) {
         const w = m.home_score > m.away_score ? m.home_team_id : m.away_team_id;
@@ -214,10 +223,10 @@ function nextKnockoutEvents(teams) {
     };
     const r1 = result(semis[0]);
     const r2 = result(semis[1]);
-    return [
-      mk(r1.loser, r2.loser, 'third_place', 9, 2),
-      mk(r1.winner, r2.winner, 'final', 9, 2 + SIM_MATCH_MINUTES + 2),
-    ];
+    const events = [];
+    if (!exists(r1.loser, r2.loser, 'third_place')) events.push(mk(r1.loser, r2.loser, 'third_place', 9, 2));
+    if (!exists(r1.winner, r2.winner, 'final')) events.push(mk(r1.winner, r2.winner, 'final', 9, 2 + SIM_MATCH_MINUTES + 2));
+    return events;
   }
   return [];
 }

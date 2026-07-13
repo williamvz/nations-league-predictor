@@ -26,7 +26,7 @@ async function syncSimulated() {
   let matched = 0;
   for (const ev of events) if (applyEvent(ev, 'sim', { updateKickoff: false }).matched) matched += 1;
   if (matched > 0) log('scores', 'sim', true, `${events.length} gesimuleerde events, ${matched} verwerkt`);
-  classifyFinals();
+  // no classifyFinals here: simulated events carry explicit, correct stages
   resolveBonusQuestions();
   return { provider: 'sim', matched };
 }
@@ -79,7 +79,7 @@ function createKnockoutMatch(ev, provider, home, away) {
   // the demo simulator provides explicit stage/matchday (its kickoffs are
   // time-compressed and fall outside the real 2027 windows)
   const stage = ev.stage || inferKnockoutStage(ev.kickoffIso);
-  if (!stage) return null;
+  if (!stage || stage === 'league') return null; // never invent league fixtures
   const matchday = ev.matchday || knockoutMatchday(stage, ev.kickoffIso);
   let info;
   try {
@@ -127,7 +127,7 @@ export function applyEvent(ev, provider, { updateKickoff = false } = {}) {
   const away = findTeam(ev.awayName);
   if (!home || !away) return { matched: false };
 
-  let match = findMatch(provider, ev.providerId, home, away, ev.kickoffIso);
+  let match = findMatch(provider, ev.providerId, home, away, ev.kickoffIso, ev.stage || null);
   if (!match && ev.kickoffIso) match = createKnockoutMatch(ev, provider, home, away);
   if (!match) return { matched: false };
 
