@@ -4,6 +4,7 @@ import { api } from '../services/api';
 import { Spinner, Avatar, LiveDot, Modal } from '../components/ui';
 import { fmtPoints } from '../utils/format';
 import { shareLeaderboardCard } from '../utils/shareCard';
+import { useT } from '../i18n';
 
 function MovementArrow({ rank, prevRank }) {
   if (prevRank == null || prevRank === rank) return <span className="w-4 text-emerald-50/20">·</span>;
@@ -12,6 +13,7 @@ function MovementArrow({ rank, prevRank }) {
 }
 
 export default function Leaderboard() {
+  const { t } = useT();
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [history, setHistory] = useState(null);
@@ -37,22 +39,23 @@ export default function Leaderboard() {
     await shareLeaderboardCard({
       rows,
       isLive: data.is_live,
-      subtitle: data.is_live ? 'Live tussenstand' : lastMd ? `Stand na speelronde ${lastMd}` : 'De stand',
+      subtitle: data.is_live ? t('board.shareLive') : lastMd ? t('board.shareAfter', { md: lastMd }) : t('board.shareDefault'),
+      footer: t('board.shareFooter'),
     });
   }
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-black">Ranglijst</h1>
+        <h1 className="text-2xl font-black">{t('board.title')}</h1>
         <div className="flex items-center gap-3">
           {data.is_live && (
             <span className="flex items-center gap-2 text-sm text-red-300">
-              <LiveDot /> incl. live-punten
+              <LiveDot /> {t('board.live')}
             </span>
           )}
           <button className="btn-ghost !px-3 !py-1.5 text-sm" onClick={share} title="Deel als afbeelding">
-            📤 Deel
+            {t('board.share')}
           </button>
         </div>
       </div>
@@ -72,10 +75,10 @@ export default function Leaderboard() {
             <div className="min-w-0 flex-1">
               <div className="truncate font-semibold">
                 {r.display_name} {r.favorite_flag && <span className="text-sm">{r.favorite_flag}</span>}
-                {r.user_id === user.id && <span className="ml-1 text-xs text-oranje-400">(jij)</span>}
+                {r.user_id === user.id && <span className="ml-1 text-xs text-oranje-400">{t('common.you')}</span>}
               </div>
               <div className="text-xs text-emerald-50/40">
-                {r.exact}× exact · {r.correct}× goed · {r.filled} ingevuld
+                {t('board.stats', { exact: r.exact, correct: r.correct, filled: r.filled })}
               </div>
             </div>
             {data.is_live && r.live_points > 0 && (
@@ -101,6 +104,7 @@ export default function Leaderboard() {
 
 /** Hand-rolled SVG bump chart: rank per matchday for every player. */
 function HistoryChart({ history, meId }) {
+  const { t } = useT();
   const byUser = new Map();
   const matchdays = [...new Set(history.map((h) => h.matchday))].sort((a, b) => a - b);
   for (const h of history) {
@@ -115,7 +119,7 @@ function HistoryChart({ history, meId }) {
 
   return (
     <div className="card p-4">
-      <h2 className="mb-2 font-bold">📈 Verloop per speelronde</h2>
+      <h2 className="mb-2 font-bold">{t('board.chart')}</h2>
       <div className="overflow-x-auto">
         <svg viewBox={`0 0 ${W} ${H}`} className="min-w-[480px]">
           {matchdays.map((md) => (
@@ -162,16 +166,17 @@ function HistoryChart({ history, meId }) {
 }
 
 function CompareModal({ compare, onClose }) {
+  const { t } = useT();
   if (!compare) return null;
   const { other, matches } = compare;
   const myTotal = matches.reduce((s, m) => s + (m.my_points || 0), 0);
   const theirTotal = matches.reduce((s, m) => s + (m.their_points || 0), 0);
   return (
-    <Modal open onClose={onClose} title={`Jij vs ${other.display_name} ${other.avatar}`} wide>
+    <Modal open onClose={onClose} title={`${t('board.vs', { name: other.display_name })} ${other.avatar}`} wide>
       <div className="mb-3 flex justify-around text-center">
         <div>
           <div className="text-2xl font-black text-oranje-400">{fmtPoints(myTotal)}</div>
-          <div className="text-xs text-emerald-50/50">jij</div>
+          <div className="text-xs text-emerald-50/50">{t('board.me')}</div>
         </div>
         <div>
           <div className="text-2xl font-black">{fmtPoints(theirTotal)}</div>

@@ -195,6 +195,9 @@ const notifCols = db.prepare("PRAGMA table_info(notifications)").all().map((c) =
 if (!notifCols.includes('meta')) {
   db.exec('ALTER TABLE notifications ADD COLUMN meta TEXT');
 }
+if (!userCols.includes('language')) {
+  db.exec("ALTER TABLE users ADD COLUMN language TEXT NOT NULL DEFAULT 'nl'");
+}
 const matchCols = db.prepare("PRAGMA table_info(matches)").all().map((c) => c.name);
 if (!matchCols.includes('winner_team_id')) {
   // knockout matches can end level after 90 minutes; the shootout/extra-time

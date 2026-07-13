@@ -10,9 +10,9 @@ router.get('/', (req, res) => {
   const questions = db.prepare(`
     SELECT q.id, q.question_key, q.question_nl, q.answer_type, q.team_group, q.deadline_utc,
            q.points, q.points_close, q.resolved, q.correct_team_id, q.correct_text, q.correct_number,
-           ct.name_nl AS correct_team_name, ct.flag AS correct_team_flag,
+           ct.name_nl AS correct_team_name, ct.flag AS correct_team_flag, ct.code AS correct_team_code,
            a.answer_team_id, a.answer_text, a.answer_number, a.points AS earned_points,
-           at.name_nl AS answer_team_name, at.flag AS answer_team_flag
+           at.name_nl AS answer_team_name, at.flag AS answer_team_flag, at.code AS answer_team_code
     FROM bonus_questions q
     LEFT JOIN bonus_answers a ON a.question_id = q.id AND a.user_id = ?
     LEFT JOIN teams at ON at.id = a.answer_team_id
@@ -24,8 +24,8 @@ router.get('/', (req, res) => {
     q.is_locked = new Date(q.deadline_utc).getTime() <= Date.now();
     if (q.answer_type === 'team') {
       q.choices = q.team_group
-        ? db.prepare('SELECT id, name_nl, flag FROM teams WHERE group_name = ? ORDER BY name_nl').all(q.team_group)
-        : db.prepare('SELECT id, name_nl, flag FROM teams ORDER BY name_nl').all();
+        ? db.prepare('SELECT id, code, name_nl, flag FROM teams WHERE group_name = ? ORDER BY name_nl').all(q.team_group)
+        : db.prepare('SELECT id, code, name_nl, flag FROM teams ORDER BY name_nl').all();
     }
     if (q.correct_text) {
       try { q.correct_names = JSON.parse(q.correct_text); } catch { q.correct_names = [q.correct_text]; }

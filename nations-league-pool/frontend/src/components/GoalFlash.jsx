@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
 import { api } from '../services/api';
+import { useT } from '../i18n';
 
 /**
  * Full-screen GOAL takeover: polls the live matches, detects score changes
@@ -9,6 +10,7 @@ import { api } from '../services/api';
  * doesn't fire a fake celebration.
  */
 export default function GoalFlash({ intervalMs = 25_000 }) {
+  const { tn } = useT();
   const [goal, setGoal] = useState(null);
   const prev = useRef(null); // matchId -> {h, a}
   const timer = useRef(null);
@@ -33,9 +35,9 @@ export default function GoalFlash({ intervalMs = 25_000 }) {
             if (homeScored || awayScored) {
               celebrate({
                 flag: homeScored ? m.home_flag : m.away_flag,
-                team: homeScored ? m.home_name : m.away_name,
+                team: homeScored ? tn(m.home_code, m.home_name) : tn(m.away_code, m.away_name),
                 score: `${m.home_score}–${m.away_score}`,
-                fixture: `${m.home_name} – ${m.away_name}`,
+                fixture: `${tn(m.home_code, m.home_name)} – ${tn(m.away_code, m.away_name)}`,
                 minute: m.minute,
               });
               break; // one celebration at a time is plenty

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { Spinner } from '../components/ui';
+import { useT } from '../i18n';
 
 /** Bold **text** segments without any HTML injection. */
 function RichLine({ text }) {
@@ -13,6 +14,7 @@ function RichLine({ text }) {
 }
 
 export default function Sportkrant() {
+  const { t, lang } = useT();
   const [recaps, setRecaps] = useState(null);
 
   useEffect(() => {
@@ -31,15 +33,15 @@ export default function Sportkrant() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-black">De Sportkrant 📰</h1>
+      <h1 className="text-2xl font-black">{t('krant.title')}</h1>
       <p className="text-sm text-emerald-50/50">
-        Na elke speelronde schrijft de redactie (een zeer onbevooroordeeld algoritme) het verslag.
+        {t('krant.subtitle')}{lang !== 'nl' && <span className="block">{t('krant.dutchNote')}</span>}
       </p>
 
       {recaps.length === 0 && (
         <div className="card p-8 text-center text-emerald-50/50">
           <div className="mb-2 text-4xl">🗞️</div>
-          Nog geen edities — de eerste verschijnt automatisch zodra speelronde 1 is gespeeld.
+          {t('krant.empty')}
         </div>
       )}
 

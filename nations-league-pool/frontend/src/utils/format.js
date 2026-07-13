@@ -1,10 +1,15 @@
-// Kickoffs are stored in UTC; always render them in Dutch time regardless of
-// the viewer's device timezone (fixes the old app's countdown drift).
+// Kickoffs are stored in UTC; always render them in Dutch (pool) time
+// regardless of the viewer's device timezone. Weekday/month names follow the
+// user's chosen language via setFormatLocale.
 const TZ = 'Europe/Amsterdam';
 
-const dayFmt = new Intl.DateTimeFormat('nl-NL', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short' });
-const timeFmt = new Intl.DateTimeFormat('nl-NL', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
-const fullFmt = new Intl.DateTimeFormat('nl-NL', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+let dayFmt, timeFmt, fullFmt;
+export function setFormatLocale(locale = 'nl-NL') {
+  dayFmt = new Intl.DateTimeFormat(locale, { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short' });
+  timeFmt = new Intl.DateTimeFormat(locale, { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+  fullFmt = new Intl.DateTimeFormat(locale, { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+}
+setFormatLocale();
 
 export function fmtDay(iso) {
   return dayFmt.format(new Date(iso));
@@ -30,27 +35,6 @@ export function groupBy(arr, keyFn) {
     out.get(k).push(item);
   }
   return out;
-}
-
-export const STAGE_META = {
-  quarterfinal: { label: 'Kwartfinale', multiplier: '×1,5' },
-  semifinal: { label: 'Halve finale', multiplier: '×2' },
-  third_place: { label: 'Troostfinale', multiplier: '×2' },
-  final: { label: 'Finale', multiplier: '×2,5' },
-};
-
-/** Section heading a match belongs under in the match list. */
-export function roundLabel(m) {
-  if (m.stage === 'league') return `Speelronde ${m.matchday}`;
-  if (m.stage === 'quarterfinal') return m.matchday === 7 ? 'Kwartfinales · heenduels' : 'Kwartfinales · returns';
-  return 'Final Four · juni 2027';
-}
-
-/** Compact context line on a match card. */
-export function matchContext(m) {
-  if (m.stage === 'league') return `Groep ${m.group_name} · Speelronde ${m.matchday}`;
-  const meta = STAGE_META[m.stage];
-  return meta ? `🏆 ${meta.label} · punten ${meta.multiplier}` : 'Knock-outfase';
 }
 
 export function countdownParts(iso) {

@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import { useT } from '../i18n';
 
 export default function More() {
+  const { t } = useT();
   const { user, logout } = useAuth();
   const [pendingCount, setPendingCount] = useState(0);
 
@@ -14,25 +16,25 @@ export default function More() {
   }, [user]);
 
   const items = [
-    { to: '/blitz', icon: '⚡', label: 'Blitz-invullen', sub: 'Alle open wedstrijden in 30 seconden' },
-    { to: '/bonus', icon: '⭐', label: 'Bonusvragen', sub: 'Groepswinnaars, topscorer & meer' },
-    { to: '/sportkrant', icon: '📰', label: 'De Sportkrant', sub: 'Het (vlijmscherpe) verslag van elke speelronde' },
-    { to: '/kristallen-bol', icon: '🔮', label: 'Kristallen Bol', sub: 'Jouw voorspelstatistieken ontleed' },
-    { to: '/prestaties', icon: '🏅', label: 'Prestaties', sub: 'Jouw ontgrendelde badges' },
-    { to: '/tv', icon: '📺', label: 'TV-modus', sub: 'Live wedstrijddag-dashboard voor het grote scherm' },
-    { to: '/profiel', icon: '👤', label: 'Profiel', sub: 'Avatar, favoriet land, wachtwoord' },
+    { to: '/blitz', icon: '⚡', label: t('more.blitz'), sub: t('more.blitzSub') },
+    { to: '/bonus', icon: '⭐', label: t('more.bonus'), sub: t('more.bonusSub') },
+    { to: '/sportkrant', icon: '📰', label: t('more.krant'), sub: t('more.krantSub') },
+    { to: '/kristallen-bol', icon: '🔮', label: t('more.bol'), sub: t('more.bolSub') },
+    { to: '/prestaties', icon: '🏅', label: t('more.ach'), sub: t('more.achSub') },
+    { to: '/tv', icon: '📺', label: t('more.tv'), sub: t('more.tvSub') },
+    { to: '/profiel', icon: '👤', label: t('more.profile'), sub: t('more.profileSub') },
   ];
   if (user?.is_admin === 1) {
     items.push({
-      to: '/admin', icon: '🛠️', label: 'Beheer',
-      sub: pendingCount > 0 ? `${pendingCount} aanmelding${pendingCount === 1 ? '' : 'en'} wacht op goedkeuring` : 'Gebruikers, sync & instellingen',
+      to: '/admin', icon: '🛠️', label: t('more.admin'),
+      sub: pendingCount > 0 ? t('more.adminPending', { n: pendingCount }) : t('more.adminSub'),
       badge: pendingCount || undefined,
     });
   }
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-black">Meer</h1>
+      <h1 className="text-2xl font-black">{t('more.title')}</h1>
       <div className="space-y-2">
         {items.map((i) => (
           <Link key={i.to} to={i.to} className="card flex items-center gap-4 p-4 hover:bg-white/[0.04]">
@@ -54,14 +56,14 @@ export default function More() {
       </div>
 
       <button className="btn-ghost w-full" onClick={logout}>
-        Uitloggen
+        {t('profile.logout')}
       </button>
 
       <div className="pt-4 text-center text-xs text-emerald-50/30">
-        <div className="mb-1 font-semibold">Puntentelling</div>
-        <div>Exacte uitslag 5 · winnaar + doelsaldo 3 · winnaar 2 · 🃏 joker ×2</div>
-        <div>Knock-outfase: kwartfinale ×1,5 · halve finale ×2 · finale ×2,5</div>
-        <div className="mt-2">Uitslagen, stand en topscorers worden automatisch bijgewerkt ⚙️</div>
+        <div className="mb-1 font-semibold">{t('more.scoring')}</div>
+        <div>{t('more.scoringLine')}</div>
+        <div>{t('more.scoringKo')}</div>
+        <div className="mt-2">{t('more.auto')}</div>
       </div>
     </div>
   );

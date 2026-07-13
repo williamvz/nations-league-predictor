@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { Spinner, StatCard } from '../components/ui';
 import { fmtPoints } from '../utils/format';
+import { useT } from '../i18n';
 
 function Bar({ label, value, max, color = 'bg-oranje-500' }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
@@ -18,6 +19,7 @@ function Bar({ label, value, max, color = 'bg-oranje-500' }) {
 }
 
 export default function KristallenBol() {
+  const { t, tn } = useT();
   const { user } = useAuth();
   const [players, setPlayers] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -39,7 +41,7 @@ export default function KristallenBol() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-black">Kristallen Bol 🔮</h1>
+        <h1 className="text-2xl font-black">{t('bol.title')}</h1>
         <select className="input !w-auto" value={selected || user.id} onChange={(e) => setSelected(Number(e.target.value))}>
           {players.map((p) => (
             <option key={p.user_id} value={p.user_id}>{p.avatar} {p.display_name}</option>
@@ -50,55 +52,54 @@ export default function KristallenBol() {
       {s.scored === 0 ? (
         <div className="card p-8 text-center text-emerald-50/50">
           <div className="mb-2 text-4xl">🔮</div>
-          Nog geen uitslagen — de bol blijft troebel tot de eerste wedstrijden gespeeld zijn.
+          {t('bol.empty')}
         </div>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatCard icon="🎯" label="Trefzekerheid" value={`${s.accuracy}%`} sub={`${s.scored} voorspellingen`} />
-            <StatCard icon="💥" label="Exact" value={s.counts.exact} />
-            <StatCard icon="🃏" label="Joker-bonus" value={`+${fmtPoints(s.joker.extra_points)}`} sub={`${s.joker.hits}/${s.joker.used} raak`} />
-            <StatCard icon="📊" label="Doelpunten" value={s.goals.predicted_avg} sub={`echt: ${s.goals.actual_avg} p/w`} />
+            <StatCard icon="🎯" label={t('bol.accuracy')} value={`${s.accuracy}%`} sub={t('bol.nPredictions', { n: s.scored })} />
+            <StatCard icon="💥" label={t('bol.exact')} value={s.counts.exact} />
+            <StatCard icon="🃏" label={t('bol.jokerBonus')} value={`+${fmtPoints(s.joker.extra_points)}`} sub={t('bol.jokerRatio', { h: s.joker.hits, u: s.joker.used })} />
+            <StatCard icon="📊" label={t('bol.goals')} value={s.goals.predicted_avg} sub={t('bol.goalsReal', { n: s.goals.actual_avg })} />
           </div>
 
           <div className="card space-y-2 p-4">
-            <h2 className="mb-1 font-bold">Hoe goed voorspel je?</h2>
-            <Bar label="💥 Exact" value={s.counts.exact} max={total} />
-            <Bar label="📐 Winnaar + saldo" value={s.counts.gd} max={total} color="bg-emerald-500" />
-            <Bar label="✅ Alleen winnaar" value={s.counts.winner} max={total} color="bg-sky-500" />
-            <Bar label="❌ Mis" value={s.counts.miss} max={total} color="bg-red-500/70" />
+            <h2 className="mb-1 font-bold">{t('bol.howGood')}</h2>
+            <Bar label={t('bol.barExact')} value={s.counts.exact} max={total} />
+            <Bar label={t('bol.barGd')} value={s.counts.gd} max={total} color="bg-emerald-500" />
+            <Bar label={t('bol.barWinner')} value={s.counts.winner} max={total} color="bg-sky-500" />
+            <Bar label={t('bol.barMiss')} value={s.counts.miss} max={total} color="bg-red-500/70" />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             {s.best_team && (
               <div className="card p-4">
-                <h2 className="font-bold">Jouw klik 💚</h2>
+                <h2 className="font-bold">{t('bol.click')}</h2>
                 <div className="mt-2 text-3xl">{s.best_team.flag}</div>
-                <div className="font-semibold">{s.best_team.name}</div>
+                <div className="font-semibold">{tn(s.best_team.code, s.best_team.name)}</div>
                 <div className="text-sm text-emerald-50/50">
-                  gemiddeld {s.best_team.avg.toFixed(1)} punten per wedstrijd met dit land
+                  {t('bol.clickSub', { n: s.best_team.avg.toFixed(1) })}
                 </div>
               </div>
             )}
             {s.worst_team && (
               <div className="card p-4">
-                <h2 className="font-bold">Jouw blinde vlek 🙈</h2>
+                <h2 className="font-bold">{t('bol.blind')}</h2>
                 <div className="mt-2 text-3xl">{s.worst_team.flag}</div>
-                <div className="font-semibold">{s.worst_team.name}</div>
+                <div className="font-semibold">{tn(s.worst_team.code, s.worst_team.name)}</div>
                 <div className="text-sm text-emerald-50/50">
-                  slechts {s.worst_team.avg.toFixed(1)} punten per wedstrijd — dit land snap je niet
+                  {t('bol.blindSub', { n: s.worst_team.avg.toFixed(1) })}
                 </div>
               </div>
             )}
           </div>
 
           <div className="card space-y-3 p-4">
-            <h2 className="font-bold">Neigingen</h2>
+            <h2 className="font-bold">{t('bol.tend')}</h2>
             <p className="text-sm text-emerald-50/70">
-              Je voorspelde <b>{s.tendency.pred_home_wins}×</b> een thuiszege (echt: {s.tendency.actual_home_wins}×) en{' '}
-              <b>{s.tendency.pred_draws}×</b> gelijkspel (echt: {s.tendency.actual_draws}×).{' '}
-              {s.goals.predicted_avg > s.goals.actual_avg + 0.5 && 'Je droomt van spektakel — de realiteit is zuiniger. '}
-              {s.goals.predicted_avg < s.goals.actual_avg - 0.5 && 'Je voorspelt te zuinig — er vallen meer goals dan je denkt. '}
+              {t('bol.tendLine', { ph: s.tendency.pred_home_wins, ah: s.tendency.actual_home_wins, pd: s.tendency.pred_draws, ad: s.tendency.actual_draws })}{' '}
+              {s.goals.predicted_avg > s.goals.actual_avg + 0.5 && t('bol.tendDream')}
+              {s.goals.predicted_avg < s.goals.actual_avg - 0.5 && t('bol.tendStingy')}
             </p>
           </div>
 
@@ -106,19 +107,19 @@ export default function KristallenBol() {
             <div className="grid gap-4 sm:grid-cols-2">
               {s.best_prediction && (
                 <div className="card p-4">
-                  <h2 className="font-bold">Gouden moment 🌟</h2>
+                  <h2 className="font-bold">{t('bol.golden')}</h2>
                   <p className="mt-1 text-sm">{s.best_prediction.fixture}</p>
                   <p className="text-sm text-emerald-50/50">
-                    jij zei {s.best_prediction.predicted} → <b className="text-oranje-300">+{fmtPoints(s.best_prediction.points)}</b>
+                    {t('bol.youSaid', { pred: s.best_prediction.predicted })} <b className="text-oranje-300">+{fmtPoints(s.best_prediction.points)}</b>
                   </p>
                 </div>
               )}
               {s.biggest_miss && (
                 <div className="card p-4">
-                  <h2 className="font-bold">Pijnlijkste misser 😬</h2>
+                  <h2 className="font-bold">{t('bol.painful')}</h2>
                   <p className="mt-1 text-sm">{s.biggest_miss.fixture}</p>
                   <p className="text-sm text-emerald-50/50">
-                    jij zei {s.biggest_miss.predicted} (0 pt) terwijl {s.biggest_miss.others_scored} andere speler{s.biggest_miss.others_scored === 1 ? '' : 's'} wél scoorde{s.biggest_miss.others_scored === 1 ? '' : 'n'}
+                    {t('bol.painfulSub', { pred: s.biggest_miss.predicted, n: s.biggest_miss.others_scored })}
                   </p>
                 </div>
               )}
@@ -127,7 +128,7 @@ export default function KristallenBol() {
 
           {s.rank_history.length > 0 && (
             <div className="card p-4">
-              <h2 className="mb-2 font-bold">Positie per ronde</h2>
+              <h2 className="mb-2 font-bold">{t('bol.perRound')}</h2>
               <div className="flex items-end gap-2">
                 {s.rank_history.map((h) => (
                   <div key={h.matchday} className="flex flex-1 flex-col items-center gap-1">
@@ -137,7 +138,7 @@ export default function KristallenBol() {
                   </div>
                 ))}
               </div>
-              <p className="mt-1 text-center text-[11px] text-emerald-50/40">balkhoogte = punten die ronde</p>
+              <p className="mt-1 text-center text-[11px] text-emerald-50/40">{t('bol.barLegend')}</p>
             </div>
           )}
         </>

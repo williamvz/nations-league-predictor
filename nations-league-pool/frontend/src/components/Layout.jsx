@@ -4,17 +4,19 @@ import confetti from 'canvas-confetti';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { Avatar, Modal } from './ui';
+import { useT } from '../i18n';
 import GoalFlash from './GoalFlash';
 
 const NAV = [
-  { to: '/', label: 'Home', icon: '🏠' },
-  { to: '/wedstrijden', label: 'Wedstrijden', icon: '⚽' },
-  { to: '/ranglijst', label: 'Ranglijst', icon: '🏆' },
-  { to: '/stand', label: 'Stand', icon: '📊' },
-  { to: '/meer', label: 'Meer', icon: '☰' },
+  { to: '/', key: 'nav.home', icon: '🏠' },
+  { to: '/wedstrijden', key: 'nav.matches', icon: '⚽' },
+  { to: '/ranglijst', key: 'nav.leaderboard', icon: '🏆' },
+  { to: '/stand', key: 'nav.standings', icon: '📊' },
+  { to: '/meer', key: 'nav.more', icon: '☰' },
 ];
 
 export default function Layout({ children }) {
+  const { t, ach } = useT();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [demoMode, setDemoMode] = useState(false);
@@ -128,7 +130,7 @@ export default function Layout({ children }) {
                   `rounded-xl px-3 py-1.5 text-sm font-semibold ${isActive ? 'bg-oranje-500/15 text-oranje-300' : 'text-emerald-50/60 hover:bg-white/5'}`
                 }
               >
-                {n.icon} {n.label}
+                {n.icon} {t(n.key)}
               </NavLink>
             ))}
             <NavLink
@@ -137,7 +139,7 @@ export default function Layout({ children }) {
                 `relative rounded-xl px-3 py-1.5 text-sm font-semibold ${isActive ? 'bg-oranje-500/15 text-oranje-300' : 'text-emerald-50/60 hover:bg-white/5'}`
               }
             >
-              ☰ Meer
+              ☰ {t('nav.more')}
               {pendingCount > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-oranje-500 px-1 text-[10px] font-bold text-pitch-950">
                   {pendingCount}
@@ -164,7 +166,7 @@ export default function Layout({ children }) {
 
       {demoMode && (
         <div className="border-b border-purple-500/30 bg-purple-500/15 px-4 py-1.5 text-center text-xs font-semibold text-purple-200">
-          🧪 DEMO-MODUS — gesimuleerd oefenseizoen, telt nergens voor. Zet <code>demo_mode</code> uit voor het echte werk.
+          {t('demo.banner')} (<code>demo_mode</code>)
         </div>
       )}
 
@@ -191,7 +193,7 @@ export default function Layout({ children }) {
                   </span>
                 )}
               </span>
-              {n.label}
+              {t(n.key)}
             </NavLink>
           ))}
         </div>
@@ -202,16 +204,16 @@ export default function Layout({ children }) {
         <div className="fixed inset-x-4 top-16 z-50 mx-auto max-w-sm">
           <div className="card border-oranje-500/40 p-4 text-center shadow-2xl">
             <div className="text-3xl">{popup.icon}</div>
-            <div className="mt-1 font-black text-oranje-300">Prestatie ontgrendeld!</div>
-            <div className="font-semibold">{popup.name}</div>
-            <div className="text-sm text-emerald-50/60">{popup.description}</div>
+            <div className="mt-1 font-black text-oranje-300">{t('ach.unlocked')}</div>
+            <div className="font-semibold">{ach(popup.key)?.[0] || popup.name}</div>
+            <div className="text-sm text-emerald-50/60">{ach(popup.key)?.[1] || popup.description}</div>
           </div>
         </div>
       )}
 
       {/* notifications */}
-      <Modal open={notifOpen} onClose={() => setNotifOpen(false)} title="Meldingen 🔔">
-        {notifications.length === 0 && <p className="py-6 text-center text-emerald-50/50">Nog geen meldingen.</p>}
+      <Modal open={notifOpen} onClose={() => setNotifOpen(false)} title={t('notif.title')}>
+        {notifications.length === 0 && <p className="py-6 text-center text-emerald-50/50">{t('notif.none')}</p>}
         <div className="space-y-2">
           {notifications.map((n) => (
             <div key={n.id} className={`rounded-xl p-3 ${n.is_read ? 'bg-white/[0.03]' : 'bg-oranje-500/10'}`}>
@@ -220,9 +222,9 @@ export default function Layout({ children }) {
               {n.type === 'registration' && n.meta?.pending_user_id && user?.is_admin === 1 && (
                 n.handled ? (
                   <div className="mt-2 text-sm text-emerald-50/50">
-                    {n.handled === 'approved' && '✓ Goedgekeurd'}
-                    {n.handled === 'rejected' && '✕ Afgewezen'}
-                    {n.handled === 'gone' && 'Al verwerkt'}
+                    {n.handled === 'approved' && t('notif.approved')}
+                    {n.handled === 'rejected' && t('notif.rejected')}
+                    {n.handled === 'gone' && t('notif.gone')}
                   </div>
                 ) : (
                   <div className="mt-2 flex gap-2">
@@ -230,10 +232,10 @@ export default function Layout({ children }) {
                       className="btn flex-1 bg-emerald-500 !py-1.5 text-pitch-950 hover:bg-emerald-400"
                       onClick={() => handleRegistration(n, 'approve')}
                     >
-                      ✓ Goedkeuren
+                      {t('notif.approve')}
                     </button>
                     <button className="btn-ghost flex-1 !py-1.5" onClick={() => handleRegistration(n, 'reject')}>
-                      ✕ Afwijzen
+                      {t('notif.reject')}
                     </button>
                   </div>
                 )

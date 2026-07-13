@@ -4,6 +4,7 @@ import { api } from '../services/api';
 import { Spinner, LiveDot } from '../components/ui';
 import GoalFlash from '../components/GoalFlash';
 import { fmtDay, fmtTime, fmtPoints } from '../utils/format';
+import { useT } from '../i18n';
 
 /**
  * TV-modus: full-screen matchday dashboard for the living-room TV or a Home
@@ -11,6 +12,7 @@ import { fmtDay, fmtTime, fmtPoints } from '../utils/format';
  * leaderboard reshuffling live, and the upcoming schedule. Refreshes itself.
  */
 export default function TV() {
+  const { t, tn } = useT();
   const [data, setData] = useState(null);
   const [clock, setClock] = useState(new Date());
 
@@ -60,18 +62,18 @@ export default function TV() {
           {live.length === 0 && (
             <div className="card p-10 text-center text-emerald-50/50">
               <div className="mb-2 text-4xl">😴</div>
-              Geen wedstrijden bezig — hieronder staat wat er aankomt.
+              {t('tv.noLive')}
             </div>
           )}
           {live.map((m) => (
             <div key={m.id} className="card border-red-500/30 p-6">
               <div className="mb-3 flex items-center justify-between text-sm text-emerald-50/50">
-                <span>{m.stage === 'league' ? `Groep ${m.group_name}` : '🏆 Knock-out'} </span>
+                <span>{m.stage === 'league' ? t('tv.group', { g: m.group_name }) : t('tv.knockout')} </span>
                 <span className="flex items-center gap-2"><LiveDot /> <b className="text-red-400">{m.minute}</b></span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex flex-1 items-center justify-end gap-4 text-right">
-                  <span className="text-3xl font-black">{m.home_name}</span>
+                  <span className="text-3xl font-black">{tn(m.home_code, m.home_name)}</span>
                   <span className="text-6xl">{m.home_flag}</span>
                 </div>
                 <div className="mx-8 text-6xl font-black tabular-nums text-red-400">
@@ -79,7 +81,7 @@ export default function TV() {
                 </div>
                 <div className="flex flex-1 items-center gap-4">
                   <span className="text-6xl">{m.away_flag}</span>
-                  <span className="text-3xl font-black">{m.away_name}</span>
+                  <span className="text-3xl font-black">{tn(m.away_code, m.away_name)}</span>
                 </div>
               </div>
               {m.goals?.length > 0 && (
@@ -94,8 +96,8 @@ export default function TV() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="card p-4">
-              <h2 className="mb-2 font-bold text-emerald-50/60">📅 Straks</h2>
-              {upcoming.length === 0 && <p className="text-sm text-emerald-50/40">Geen geplande wedstrijden.</p>}
+              <h2 className="mb-2 font-bold text-emerald-50/60">{t('tv.upcoming')}</h2>
+              {upcoming.length === 0 && <p className="text-sm text-emerald-50/40">{t('tv.noScheduled')}</p>}
               {upcoming.map((m) => (
                 <div key={m.id} className="flex items-center justify-between py-1.5 text-lg">
                   <span>{m.home_flag} <b>{m.home_code}</b> – <b>{m.away_code}</b> {m.away_flag}</span>
@@ -104,8 +106,8 @@ export default function TV() {
               ))}
             </div>
             <div className="card p-4">
-              <h2 className="mb-2 font-bold text-emerald-50/60">🏁 Net afgelopen</h2>
-              {recent.length === 0 && <p className="text-sm text-emerald-50/40">Nog geen uitslagen.</p>}
+              <h2 className="mb-2 font-bold text-emerald-50/60">{t('tv.finished')}</h2>
+              {recent.length === 0 && <p className="text-sm text-emerald-50/40">{t('tv.noResults')}</p>}
               {recent.map((m) => (
                 <div key={m.id} className="flex items-center justify-between py-1.5 text-lg">
                   <span>{m.home_flag} <b>{m.home_code}</b> – <b>{m.away_code}</b> {m.away_flag}</span>
@@ -119,7 +121,7 @@ export default function TV() {
         {/* leaderboard column */}
         <div className="card self-start p-5">
           <h2 className="mb-3 flex items-center gap-2 text-xl font-black">
-            🏆 Ranglijst {leaderboard.is_live && <LiveDot />}
+            🏆 {t('tv.board')} {leaderboard.is_live && <LiveDot />}
           </h2>
           <div className="space-y-2">
             {rows.slice(0, 12).map((r) => (

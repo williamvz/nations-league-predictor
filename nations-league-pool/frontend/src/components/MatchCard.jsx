@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../services/api';
-import { fmtDay, fmtTime, fmtPoints, matchContext } from '../utils/format';
+import { fmtDay, fmtTime, fmtPoints } from '../utils/format';
+import { useT, matchContextT } from '../i18n';
 import { Countdown, LiveDot } from './ui';
 
 function Stepper({ value, onChange, disabled }) {
@@ -41,6 +42,7 @@ function pointsBadge(points) {
  * filling in a whole matchday from your phone).
  */
 export default function MatchCard({ match, onSaved, onOpenDetail }) {
+  const { t, tn } = useT();
   const p = match.prediction;
   const [editing, setEditing] = useState(false);
   const [home, setHome] = useState(p?.home_goals ?? 1);
@@ -71,19 +73,19 @@ export default function MatchCard({ match, onSaved, onOpenDetail }) {
     <div className={`card p-4 ${live ? 'ring-1 ring-red-500/40' : ''}`}>
       <div className="mb-2 flex items-center justify-between text-xs text-emerald-50/50">
         <span className={match.stage !== 'league' ? 'font-semibold text-oranje-300/80' : ''}>
-          {matchContext(match)}
+          {matchContextT(t, match)}
         </span>
         <span className="flex items-center gap-2">
           {live && <LiveDot />}
           {live && match.minute && <span className="font-semibold text-red-400">{match.minute}</span>}
           {!locked && <span>{fmtDay(match.kickoff_utc)} · {fmtTime(match.kickoff_utc)}</span>}
-          {finished && <span>Afgelopen</span>}
+          {finished && <span>{t('match.finished')}</span>}
         </span>
       </div>
 
       <button className="flex w-full items-center justify-between gap-2" onClick={() => onOpenDetail?.(match)}>
         <div className="flex flex-1 items-center justify-end gap-2 text-right">
-          <span className="truncate font-semibold">{match.home_name}</span>
+          <span className="truncate font-semibold">{tn(match.home_code, match.home_name)}</span>
           <span className="text-2xl">{match.home_flag}</span>
         </div>
         <div className="min-w-[72px] text-center">
@@ -92,7 +94,7 @@ export default function MatchCard({ match, onSaved, onOpenDetail }) {
               {match.home_score}–{match.away_score}
               {finished && match.winner_team_id && match.home_score === match.away_score && (
                 <span className="block text-[10px] font-semibold text-emerald-50/50">
-                  {match.winner_team_id === match.home_team_id ? match.home_name : match.away_name} wint na strafschoppen
+                  {t('match.pens', { team: match.winner_team_id === match.home_team_id ? tn(match.home_code, match.home_name) : tn(match.away_code, match.away_name) })}
                 </span>
               )}
             </span>
@@ -104,7 +106,7 @@ export default function MatchCard({ match, onSaved, onOpenDetail }) {
         </div>
         <div className="flex flex-1 items-center gap-2">
           <span className="text-2xl">{match.away_flag}</span>
-          <span className="truncate font-semibold">{match.away_name}</span>
+          <span className="truncate font-semibold">{tn(match.away_code, match.away_name)}</span>
         </div>
       </button>
 
@@ -114,12 +116,12 @@ export default function MatchCard({ match, onSaved, onOpenDetail }) {
           <button className="flex w-full items-center justify-between" onClick={() => setEditing(true)}>
             {p ? (
               <span className="flex items-center gap-2 text-sm">
-                <span className="text-emerald-50/50">Jouw voorspelling:</span>
+                <span className="text-emerald-50/50">{t('match.your')}</span>
                 <span className="font-bold">{p.home_goals}–{p.away_goals}</span>
                 {p.is_joker === 1 && <span className="chip bg-purple-500/20 text-purple-300">🃏 Joker</span>}
               </span>
             ) : (
-              <span className="text-sm font-semibold text-oranje-400">→ Vul je voorspelling in</span>
+              <span className="text-sm font-semibold text-oranje-400">{t('match.fill')}</span>
             )}
             <span className="text-emerald-50/40">✏️</span>
           </button>
@@ -139,15 +141,15 @@ export default function MatchCard({ match, onSaved, onOpenDetail }) {
                 onChange={(e) => setJoker(e.target.checked)}
                 className="h-4 w-4 accent-purple-500"
               />
-              🃏 Joker — dubbele punten (1 per speelronde)
+              {t('match.joker')}
             </label>
             {error && <div className="text-center text-sm text-red-400">{error}</div>}
             <div className="flex gap-2">
               <button className="btn-ghost flex-1" onClick={() => setEditing(false)} disabled={saving}>
-                Annuleer
+                {t('common.cancel')}
               </button>
               <button className="btn-primary flex-1" onClick={save} disabled={saving}>
-                {saving ? 'Opslaan…' : 'Opslaan'}
+                {saving ? t('common.saving') : t('common.save')}
               </button>
             </div>
           </div>
@@ -157,17 +159,17 @@ export default function MatchCard({ match, onSaved, onOpenDetail }) {
           <div className="flex items-center justify-between text-sm">
             {p ? (
               <span className="flex items-center gap-2">
-                <span className="text-emerald-50/50">Jouw voorspelling:</span>
+                <span className="text-emerald-50/50">{t('match.your')}</span>
                 <span className="font-bold">{p.home_goals}–{p.away_goals}</span>
                 {p.is_joker === 1 && <span className="chip bg-purple-500/20 text-purple-300">🃏</span>}
                 {pointsBadge(p.points)}
               </span>
             ) : (
-              <span className="text-emerald-50/40">Geen voorspelling 😢</span>
+              <span className="text-emerald-50/40">{t('match.none')}</span>
             )}
             {match.community && match.community.total > 0 && (
               <span className="text-xs text-emerald-50/40">
-                {match.community.home_wins}·{match.community.draws}·{match.community.away_wins} van {match.community.total}
+                {match.community.home_wins}·{match.community.draws}·{match.community.away_wins} {t('match.of', { n: match.community.total })}
               </span>
             )}
           </div>

@@ -15,7 +15,7 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-export async function shareLeaderboardCard({ rows, subtitle, isLive }) {
+export async function shareLeaderboardCard({ rows, subtitle, isLive, footer }) {
   const top = rows.slice(0, 10);
   const rowH = 96;
   const headerH = 320;
@@ -77,7 +77,7 @@ export async function shareLeaderboardCard({ rows, subtitle, isLive }) {
   ctx.textAlign = 'center';
   ctx.font = '600 32px system-ui, sans-serif';
   ctx.fillStyle = 'rgba(244,255,248,0.45)';
-  ctx.fillText('⚽ UEFA Nations League 2026/27 · om de eeuwige roem 😤', W / 2, H - 60);
+  ctx.fillText(footer || '⚽ UEFA Nations League 2026/27', W / 2, H - 60);
 
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
   const file = new File([blob], 'nations-league-pool-stand.png', { type: 'image/png' });

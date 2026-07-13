@@ -3,10 +3,13 @@ import { useAuth } from '../context/AuthContext';
 import { api, setToken } from '../services/api';
 import { Avatar, ErrorNote, StatCard, Spinner } from '../components/ui';
 import { fmtPoints } from '../utils/format';
+import { useT } from '../i18n';
+import { LANGUAGES } from '../i18n/translations';
 
 const AVATARS = ['⚽', '🦁', '🐐', '🚀', '🔥', '🍀', '🧠', '🦊', '🐙', '👽', '🤖', '🐝', '🦅', '🌪️', '🧙', '🥷', '🎩', '🍟'];
 
 export default function Profile() {
+  const { t, tn, lang } = useT();
   const { user, setUser, logout } = useAuth();
   const [summary, setSummary] = useState(null);
   const [name, setName] = useState(user.display_name);
@@ -27,7 +30,7 @@ export default function Profile() {
     try {
       const d = await api.updateMe(payload);
       setUser(d.user);
-      setMsg('Opgeslagen ✓');
+      setMsg(t('common.saved'));
       setTimeout(() => setMsg(null), 2000);
     } catch (err) {
       setError(err.message);
@@ -46,26 +49,26 @@ export default function Profile() {
 
       {user.must_change_password === 1 && (
         <div className="rounded-xl border border-oranje-500/40 bg-oranje-500/10 p-3 text-sm text-oranje-200">
-          ⚠️ Je gebruikt nog een tijdelijk wachtwoord — wijzig het hieronder.
+          {t('profile.tempPw')}
         </div>
       )}
 
       {summary && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard icon="🎯" label="Totaal" value={fmtPoints(summary.total_points)} />
-          <StatCard icon="⭐" label="Bonus" value={fmtPoints(summary.bonus_points)} />
-          <StatCard icon="💥" label="Exact" value={summary.exact} />
-          <StatCard icon="✅" label="Goed" value={summary.correct} />
+          <StatCard icon="🎯" label={t('profile.total')} value={fmtPoints(summary.total_points)} />
+          <StatCard icon="⭐" label={t('profile.bonus')} value={fmtPoints(summary.bonus_points)} />
+          <StatCard icon="💥" label={t('profile.exact')} value={summary.exact} />
+          <StatCard icon="✅" label={t('profile.correct')} value={summary.correct} />
         </div>
       )}
 
       <section className="card space-y-4 p-4">
-        <h2 className="font-bold">Profiel</h2>
+        <h2 className="font-bold">{t('profile.section')}</h2>
         {msg && <div className="text-sm text-emerald-300">{msg}</div>}
         <ErrorNote error={error} />
 
         <div>
-          <label className="mb-1 block text-sm text-emerald-50/60">Avatar</label>
+          <label className="mb-1 block text-sm text-emerald-50/60">{t('profile.avatar')}</label>
           <div className="flex flex-wrap gap-2">
             {AVATARS.map((a) => (
               <button
@@ -79,16 +82,16 @@ export default function Profile() {
           </div>
           {teams.length > 0 && (
             <>
-              <label className="mb-1 mt-3 block text-sm text-emerald-50/60">…of een landvlag</label>
+              <label className="mb-1 mt-3 block text-sm text-emerald-50/60">{t('profile.orFlag')}</label>
               <div className="flex flex-wrap gap-2">
-                {teams.map((t) => (
+                {teams.map((tm) => (
                   <button
-                    key={t.team_id}
-                    title={t.name_nl}
-                    onClick={() => save({ avatar: t.flag })}
-                    className={`flex h-10 w-10 items-center justify-center rounded-full text-xl ${user.avatar === t.flag ? 'bg-oranje-500/30 ring-2 ring-oranje-500' : 'bg-white/5 hover:bg-white/10'}`}
+                    key={tm.team_id}
+                    title={tn(tm.code, tm.name_nl)}
+                    onClick={() => save({ avatar: tm.flag })}
+                    className={`flex h-10 w-10 items-center justify-center rounded-full text-xl ${user.avatar === tm.flag ? 'bg-oranje-500/30 ring-2 ring-oranje-500' : 'bg-white/5 hover:bg-white/10'}`}
                   >
-                    {t.flag}
+                    {tm.flag}
                   </button>
                 ))}
               </div>
@@ -97,27 +100,41 @@ export default function Profile() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-emerald-50/60">Weergavenaam</label>
+          <label className="mb-1 block text-sm text-emerald-50/60">{t('profile.displayName')}</label>
           <div className="flex gap-2">
             <input className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={30} />
             <button className="btn-primary" onClick={() => save({ display_name: name })} disabled={name.trim().length < 2}>
-              Opslaan
+              {t('common.save')}
             </button>
           </div>
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-emerald-50/60">Favoriet land</label>
+          <label className="mb-1 block text-sm text-emerald-50/60">{t('profile.favTeam')}</label>
           <select
             className="input"
             value={user.favorite_team_id || ''}
             onChange={(e) => save({ favorite_team_id: e.target.value ? Number(e.target.value) : null })}
           >
-            <option value="">— geen —</option>
-            {teams.map((t) => (
-              <option key={t.team_id} value={t.team_id}>{t.flag} {t.name_nl}</option>
+            <option value="">{t('common.none')}</option>
+            {teams.map((tm) => (
+              <option key={tm.team_id} value={tm.team_id}>{tm.flag} {tn(tm.code, tm.name_nl)}</option>
             ))}
           </select>
+          <div>
+            <label className="mb-1 block text-sm text-emerald-50/60">{t('profile.language')} 🌍</label>
+            <div className="flex flex-wrap gap-2">
+              {LANGUAGES.map((l) => (
+                <button
+                  key={l.code}
+                  onClick={() => save({ language: l.code })}
+                  className={`btn ${lang === l.code ? 'bg-oranje-500 text-pitch-950' : 'btn-ghost'} !px-3 !py-1.5`}
+                >
+                  {l.flag} {l.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -125,7 +142,7 @@ export default function Profile() {
 
       <PasswordSection />
 
-      <button className="btn-ghost w-full" onClick={logout}>Uitloggen</button>
+      <button className="btn-ghost w-full" onClick={logout}>{t('profile.logout')}</button>
     </div>
   );
 }
@@ -138,6 +155,7 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 function PushSection() {
+  const { t } = useT();
   const supported = 'serviceWorker' in navigator && 'PushManager' in window && window.isSecureContext;
   const [subscribed, setSubscribed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -154,10 +172,10 @@ function PushSection() {
   if (!supported) {
     return (
       <section className="card p-4">
-        <h2 className="font-bold">Pushmeldingen 🔕</h2>
+        <h2 className="font-bold">{t('profile.push')} 🔕</h2>
         <p className="mt-1 text-sm text-emerald-50/50">
-          Pushmeldingen vereisen een beveiligde verbinding (HTTPS of via Home Assistant).
-          {typeof navigator !== 'undefined' && !window.isSecureContext && ' Open de app via het HA-menu of een https-adres om ze aan te zetten.'}
+          {t('profile.pushNeedsHttps')}
+          {typeof navigator !== 'undefined' && !window.isSecureContext && ` ${t('profile.pushHint')}`}
         </p>
       </section>
     );
@@ -175,11 +193,11 @@ function PushSection() {
           await sub.unsubscribe();
         }
         setSubscribed(false);
-        setMsg('Pushmeldingen uitgezet op dit apparaat.');
+        setMsg(t('profile.pushDisabled'));
       } else {
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') {
-          setMsg('Meldingen zijn geweigerd in je browserinstellingen.');
+          setMsg(t('profile.pushDenied'));
           return;
         }
         const { key } = await api.pushKey();
@@ -190,10 +208,10 @@ function PushSection() {
         await api.pushSubscribe(sub.toJSON());
         setSubscribed(true);
         await api.pushTest();
-        setMsg('Aangezet! Er komt zo een testmelding binnen 🎉');
+        setMsg(t('profile.pushEnabled'));
       }
     } catch (err) {
-      setMsg(`Dat lukte niet: ${err.message}`);
+      setMsg(t('profile.pushFail', { msg: err.message }));
     } finally {
       setBusy(false);
     }
@@ -201,19 +219,20 @@ function PushSection() {
 
   return (
     <section className="card space-y-2 p-4">
-      <h2 className="font-bold">Pushmeldingen {subscribed ? '🔔' : '🔕'}</h2>
+      <h2 className="font-bold">{t('profile.push')} {subscribed ? '🔔' : '🔕'}</h2>
       <p className="text-sm text-emerald-50/50">
-        Uitslagen, speelronde-herinneringen en de dagwinnaar direct op dit apparaat — ook als de app dicht is.
+        {t('profile.pushExplain')}
       </p>
       {msg && <div className="text-sm text-emerald-300">{msg}</div>}
       <button className={subscribed ? 'btn-ghost w-full' : 'btn-primary w-full'} onClick={toggle} disabled={busy}>
-        {busy ? 'Even geduld…' : subscribed ? 'Zet uit op dit apparaat' : 'Zet aan op dit apparaat'}
+        {busy ? t('common.wait') : subscribed ? t('profile.pushOff') : t('profile.pushOn')}
       </button>
     </section>
   );
 }
 
 function PasswordSection() {
+  const { t } = useT();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [msg, setMsg] = useState(null);
@@ -227,7 +246,7 @@ function PasswordSection() {
       const d = await api.changePassword(current, next);
       if (d.token) setToken(d.token);
       await refreshUser();
-      setMsg('Wachtwoord gewijzigd ✓');
+      setMsg(t('profile.pwChanged'));
       setCurrent('');
       setNext('');
     } catch (err) {
@@ -237,13 +256,13 @@ function PasswordSection() {
 
   return (
     <section className="card space-y-3 p-4">
-      <h2 className="font-bold">Wachtwoord wijzigen</h2>
+      <h2 className="font-bold">{t('profile.pwTitle')}</h2>
       {msg && <div className="text-sm text-emerald-300">{msg}</div>}
       <ErrorNote error={error} />
-      <input className="input" type="password" placeholder="Huidig wachtwoord" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" />
-      <input className="input" type="password" placeholder="Nieuw wachtwoord (min. 6 tekens)" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" />
+      <input className="input" type="password" placeholder={t('profile.pwCurrent')} value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" />
+      <input className="input" type="password" placeholder={t('profile.pwNew')} value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" />
       <button className="btn-primary w-full" onClick={change} disabled={next.length < 6 || !current}>
-        Wijzig wachtwoord
+        {t('profile.pwButton')}
       </button>
     </section>
   );
