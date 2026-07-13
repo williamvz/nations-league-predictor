@@ -11,6 +11,7 @@ import Achievements from './pages/Achievements';
 import Profile from './pages/Profile';
 import More from './pages/More';
 import Admin from './pages/Admin';
+import TV from './pages/TV';
 import { Spinner } from './components/ui';
 
 function Shell() {
@@ -24,6 +25,15 @@ function Shell() {
   }
   if (!user) return <Login />;
 
+  return (
+    <Routes>
+      <Route path="/tv" element={<TV />} />
+      <Route path="*" element={<AppRoutes user={user} />} />
+    </Routes>
+  );
+}
+
+function AppRoutes({ user }) {
   return (
     <Layout>
       <Routes>

@@ -5,6 +5,7 @@ import { findTeam, findMatch, rememberProviderId } from './matcher.js';
 import { processMatchResult } from '../services/scoring.js';
 import { resolveBonusQuestions } from '../services/bonus.js';
 import { broadcast } from '../services/notify.js';
+import { fireHomeAssistantEvent } from '../services/ha.js';
 
 function log(job, provider, ok, message) {
   db.prepare('INSERT INTO sync_log (job, provider, ok, message) VALUES (?, ?, ?, ?)')
@@ -150,6 +151,22 @@ export function applyEvent(ev, provider, { updateKickoff = false } = {}) {
   }
 
   if (ev.status === 'live' && ev.homeScore != null) {
+    // a score increase = GOAL → event on the HA bus for light-show automations
+    const prevHome = match.status === 'live' ? (match.home_score ?? 0) : 0;
+    const prevAway = match.status === 'live' ? (match.away_score ?? 0) : 0;
+    if (ev.homeScore > prevHome || ev.awayScore > prevAway) {
+      const scoringTeam = ev.homeScore > prevHome ? home : away;
+      const lastGoal = ev.goals?.length ? ev.goals[ev.goals.length - 1] : null;
+      fireHomeAssistantEvent('nlpool_goal', {
+        team_code: scoringTeam.code,
+        team: scoringTeam.name_nl,
+        player: lastGoal?.player || null,
+        minute: ev.minute,
+        score: `${ev.homeScore}-${ev.awayScore}`,
+        home: home.code,
+        away: away.code,
+      }).catch(() => {});
+    }
     db.prepare(`
       UPDATE matches SET status = 'live', minute = ?, home_score = ?, away_score = ?,
         result_source = ?, updated_at = datetime('now')
@@ -170,6 +187,14 @@ export function applyEvent(ev, provider, { updateKickoff = false } = {}) {
     }
     storeGoals(match, ev, home, away);
     processMatchResult(match.id);
+    if (match.status !== 'finished') {
+      fireHomeAssistantEvent('nlpool_result', {
+        home: home.code, away: away.code,
+        home_team: home.name_nl, away_team: away.name_nl,
+        score: `${ev.homeScore}-${ev.awayScore}`,
+        stage: match.stage, matchday: match.matchday,
+      }).catch(() => {});
+    }
     changed = true;
   }
 

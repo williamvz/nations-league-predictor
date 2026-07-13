@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { Avatar, Modal } from './ui';
+import GoalFlash from './GoalFlash';
 
 const NAV = [
   { to: '/', label: 'Home', icon: '🏠' },
@@ -168,6 +169,8 @@ export default function Layout({ children }) {
       )}
 
       <main className="mx-auto max-w-5xl px-4 pb-28 pt-4 md:pb-8">{children}</main>
+
+      <GoalFlash />
 
       {/* mobile bottom nav */}
       <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-white/5 bg-pitch-950/95 backdrop-blur md:hidden">

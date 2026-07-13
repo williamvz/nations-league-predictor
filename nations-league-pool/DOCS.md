@@ -20,6 +20,32 @@ Het echte seizoen begint pas op 24 september — maar je kunt het hele systeem n
 - De demo gebruikt een **eigen database** (`nlpool-demo.db`); je echte pool blijft onaangeroerd. Bij elke herstart in demo-modus begint een vers seizoen.
 - Klaar? Zet `demo_mode: false` en herstart — de app pakt de echte database weer op. Een paarse banner in de app maakt altijd duidelijk dat je naar de demo kijkt.
 
+## 🎇 Wedstrijddag-spektakel
+
+- **⚽ GOAL-flash**: valt er een doelpunt tijdens een live wedstrijd, dan neemt de app even het scherm over — vlag, doelpuntenmaker, nieuwe stand, confetti en een trilsignaal op je telefoon.
+- **📺 TV-modus** (*Meer → TV-modus*, of direct `/#/tv`): een fullscreen wedstrijddag-dashboard voor de tv of een muurtablet — grote live scoreborden met doelpuntenmakers en tikkende klok, de familieranglijst die live herschikt, en het komende programma. Ververst zichzelf; ideaal als Webpage-kaart in een Home Assistant-dashboard.
+- **🏠 Automatiseringen**: de add-on vuurt events af op de Home Assistant-eventbus — bouw er je eigen lichtshow mee! Events: `nlpool_goal` (met `team_code`, `team`, `player`, `minute`, `score`) en `nlpool_result` (met `home`, `away`, `score`, `stage`). Voorbeeld — woonkamer oranje bij een goal van Nederland:
+
+```yaml
+automation:
+  - alias: "Oranje lichtshow bij goal Nederland"
+    trigger:
+      - platform: event
+        event_type: nlpool_goal
+        event_data:
+          team_code: NED
+    action:
+      - service: light.turn_on
+        target:
+          area_id: woonkamer
+        data:
+          rgb_color: [255, 122, 0]
+          brightness: 255
+          flash: long
+```
+
+Tip: in **demo-modus** vuren deze events ook — test je lichtshow dus gewoon vandaag met een gesimuleerd seizoen. 🧪
+
 ## Aanmeldingen & goedkeuring
 
 Iedereen kan zich aanmelden via de loginpagina. Zo verloopt de communicatie:
