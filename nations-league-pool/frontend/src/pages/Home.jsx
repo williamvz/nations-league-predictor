@@ -72,7 +72,7 @@ export default function Home() {
                 Eerstvolgende deadline: <Countdown iso={todo[0].kickoff_utc} />
               </div>
             </div>
-            <Link to="/wedstrijden" className="btn-primary">Invullen</Link>
+            <Link to="/blitz" className="btn-primary">⚡ Invullen</Link>
           </div>
         </div>
       )}

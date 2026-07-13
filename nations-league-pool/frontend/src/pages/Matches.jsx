@@ -67,6 +67,11 @@ export default function Matches() {
             {f.label} ({counts[f.key]})
           </button>
         ))}
+        {counts.open > 0 && (
+          <button className="chip whitespace-nowrap bg-purple-500/20 text-purple-300" onClick={() => navigate('/blitz')}>
+            ⚡ Blitz ({counts.open})
+          </button>
+        )}
       </div>
 
       {filtered.length === 0 && (
@@ -85,6 +90,71 @@ export default function Matches() {
       ))}
 
       <MatchDetail id={id} onClose={() => navigate('/wedstrijden')} />
+    </div>
+  );
+}
+
+/**
+ * Consensus-heatmap: the family's predictions as a scoreline grid (home goals
+ * → columns, away goals → rows). Darker orange = more people picked it; the
+ * real result gets a ring once known. Only visible after kickoff.
+ */
+function ConsensusHeatmap({ predictions, homeName, awayName, actual }) {
+  const cap = (n) => Math.min(n, 4); // 4 means "4+"
+  const grid = new Map();
+  for (const p of predictions) {
+    const key = `${cap(p.home_goals)}-${cap(p.away_goals)}`;
+    grid.set(key, (grid.get(key) || 0) + 1);
+  }
+  const maxCount = Math.max(...grid.values());
+  const label = (n) => (n === 4 ? '4+' : n);
+
+  return (
+    <div className="card p-3">
+      <h3 className="mb-2 text-sm font-bold text-emerald-50/60">🌡️ Consensus — wat dacht de groep?</h3>
+      <div className="flex justify-center">
+        <table className="border-separate border-spacing-1">
+          <thead>
+            <tr>
+              <th className="pr-1 text-right align-bottom text-[9px] font-normal text-emerald-50/40">
+                {awayName} ↓
+              </th>
+              {[0, 1, 2, 3, 4].map((h) => (
+                <th key={h} className="w-9 text-[10px] font-semibold text-emerald-50/50">{label(h)}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {[0, 1, 2, 3, 4].map((a) => (
+              <tr key={a}>
+                <td className="pr-1 text-right text-[10px] font-semibold text-emerald-50/50">{label(a)}</td>
+                {[0, 1, 2, 3, 4].map((h) => {
+                  const count = grid.get(`${h}-${a}`) || 0;
+                  const isActual = actual && cap(actual.h) === h && cap(actual.a) === a;
+                  return (
+                    <td
+                      key={h}
+                      className={`h-9 w-9 rounded-md text-center text-xs font-bold tabular-nums ${isActual ? 'ring-2 ring-emerald-400' : ''}`}
+                      style={{
+                        backgroundColor: count > 0
+                          ? `rgba(255, 122, 0, ${0.15 + 0.7 * (count / maxCount)})`
+                          : 'rgba(255,255,255,0.03)',
+                        color: count > 0 ? '#07100c' : 'rgba(236,253,245,0.15)',
+                      }}
+                      title={`${homeName} ${label(h)} – ${label(a)} ${awayName}: ${count}×`}
+                    >
+                      {count || ''}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-1 text-center text-[10px] text-emerald-50/40">
+        → {homeName} · donkerder = vaker voorspeld{actual ? ' · groene ring = de uitslag' : ''}
+      </p>
     </div>
   );
 }
@@ -138,6 +208,11 @@ function MatchDetail({ id, onClose }) {
                 </div>
               ))}
             </div>
+          )}
+
+          {m.all_predictions && m.all_predictions.length > 1 && (
+            <ConsensusHeatmap predictions={m.all_predictions} homeName={m.home_name} awayName={m.away_name}
+              actual={m.home_score != null ? { h: m.home_score, a: m.away_score } : null} />
           )}
 
           {m.all_predictions && (

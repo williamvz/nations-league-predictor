@@ -14,7 +14,10 @@ export default function More() {
   }, [user]);
 
   const items = [
+    { to: '/blitz', icon: '⚡', label: 'Blitz-invullen', sub: 'Alle open wedstrijden in 30 seconden' },
     { to: '/bonus', icon: '⭐', label: 'Bonusvragen', sub: 'Groepswinnaars, topscorer & meer' },
+    { to: '/sportkrant', icon: '📰', label: 'De Sportkrant', sub: 'Het (vlijmscherpe) verslag van elke speelronde' },
+    { to: '/kristallen-bol', icon: '🔮', label: 'Kristallen Bol', sub: 'Jouw voorspelstatistieken ontleed' },
     { to: '/prestaties', icon: '🏅', label: 'Prestaties', sub: 'Jouw ontgrendelde badges' },
     { to: '/tv', icon: '📺', label: 'TV-modus', sub: 'Live wedstrijddag-dashboard voor het grote scherm' },
     { to: '/profiel', icon: '👤', label: 'Profiel', sub: 'Avatar, favoriet land, wachtwoord' },
