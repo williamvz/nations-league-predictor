@@ -15,7 +15,10 @@ const MATCH_SELECT = `
 `;
 
 function decorate(match, userId) {
-  const locked = new Date(match.kickoff_utc).getTime() <= Date.now();
+  // a match that is underway or finished is always locked, even if its
+  // scheduled kickoff time is somehow still in the future (early kickoff,
+  // manual result, clock drift)
+  const locked = new Date(match.kickoff_utc).getTime() <= Date.now() || match.status !== 'scheduled';
   const out = { ...match, is_locked: locked };
   if (userId) {
     out.prediction = db.prepare(

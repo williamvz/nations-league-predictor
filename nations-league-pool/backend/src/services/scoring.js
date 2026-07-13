@@ -2,6 +2,7 @@ import db from '../db/database.js';
 import { checkAchievements, checkMatchdayAchievements } from './achievements.js';
 import { broadcast } from './notify.js';
 import { sendPush } from './push.js';
+import { publishRecap } from './sportkrant.js';
 
 export const SCORING = { exact: 5, difference: 3, winner: 2 };
 
@@ -127,6 +128,13 @@ export function finalizeMatchdayIfComplete(matchday) {
   tx();
 
   checkMatchdayAchievements(matchday);
+
+  // De Sportkrant writes its recap once the snapshots exist
+  try {
+    publishRecap(matchday);
+  } catch (err) {
+    console.error('⚠️ Sportkrant mislukt:', err.message);
+  }
 
   const best = rows.filter((r) => r.matchday_points > 0)
     .sort((a, b) => b.matchday_points - a.matchday_points)[0];

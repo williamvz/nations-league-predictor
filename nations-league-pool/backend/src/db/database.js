@@ -168,6 +168,13 @@ CREATE TABLE IF NOT EXISTS sync_log (
   message TEXT NOT NULL DEFAULT ''
 );
 
+CREATE TABLE IF NOT EXISTS recaps (
+  matchday INTEGER PRIMARY KEY,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL

@@ -12,6 +12,9 @@ import Profile from './pages/Profile';
 import More from './pages/More';
 import Admin from './pages/Admin';
 import TV from './pages/TV';
+import Sportkrant from './pages/Sportkrant';
+import KristallenBol from './pages/KristallenBol';
+import Blitz from './pages/Blitz';
 import { Spinner } from './components/ui';
 
 function Shell() {
@@ -44,6 +47,9 @@ function AppRoutes({ user }) {
         <Route path="/stand" element={<Standings />} />
         <Route path="/bonus" element={<Bonus />} />
         <Route path="/prestaties" element={<Achievements />} />
+        <Route path="/sportkrant" element={<Sportkrant />} />
+        <Route path="/kristallen-bol" element={<KristallenBol />} />
+        <Route path="/blitz" element={<Blitz />} />
         <Route path="/profiel" element={<Profile />} />
         <Route path="/meer" element={<More />} />
         {user.is_admin === 1 && <Route path="/admin" element={<Admin />} />}

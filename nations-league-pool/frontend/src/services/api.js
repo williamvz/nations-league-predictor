@@ -84,6 +84,9 @@ export const api = {
   unseenAchievements: () => request('/achievements/unseen'),
   markAchievementsSeen: () => request('/achievements/seen', { method: 'POST' }),
 
+  recaps: () => request('/recaps'),
+  stats: (userId) => request(userId ? `/stats/${userId}` : '/stats'),
+
   pushKey: () => request('/push/key'),
   pushSubscribe: (subscription) => request('/push/subscribe', { method: 'POST', body: { subscription } }),
   pushUnsubscribe: (endpoint) => request('/push/unsubscribe', { method: 'POST', body: { endpoint } }),

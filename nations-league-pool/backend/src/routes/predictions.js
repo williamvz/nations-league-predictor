@@ -60,7 +60,7 @@ router.post('/', (req, res) => {
 
   const match = db.prepare('SELECT * FROM matches WHERE id = ?').get(matchId);
   if (!match) return res.status(404).json({ error: 'Wedstrijd niet gevonden' });
-  if (new Date(match.kickoff_utc).getTime() <= Date.now()) {
+  if (new Date(match.kickoff_utc).getTime() <= Date.now() || match.status !== 'scheduled') {
     return res.status(403).json({ error: 'Deze wedstrijd is al begonnen — voorspellen kan niet meer' });
   }
 

@@ -46,6 +46,13 @@ automation:
 
 Tip: in **demo-modus** vuren deze events ook — test je lichtshow dus gewoon vandaag met een gesimuleerd seizoen. 🧪
 
+## 📰 De Sportkrant, 🔮 statistieken & ⚡ Blitz
+
+- **De Sportkrant** (*Meer → De Sportkrant*): na elke speelronde verschijnt automatisch een vlijmscherp Nederlands verslag — dagwinnaar, joker-helden en -drama's, stijgers, dalers, de stunt die niemand zag aankomen en wie er wéér vergat in te vullen. Iedereen krijgt een melding; delen naar de groepsapp kan met één tik.
+- **Kristallen Bol** (*Meer → Kristallen Bol*): persoonlijke voorspelstatistieken — trefzekerheid, exact/saldo/winnaar-verdeling, joker-rendement, "jouw klik" en "jouw blinde vlek" per land, neigingen (te veel doelpunten? te vaak thuiswinst?) en je pijnlijkste misser. Ook van je tegenstanders te bekijken. 👀
+- **Consensus-heatmap**: open een gestarte wedstrijd en zie als hittekaart wat de hele groep voorspelde — met een groene ring om de echte uitslag.
+- **⚡ Blitz-invullen** (*Meer → Blitz*, of de ⚡-knoppen): alle open wedstrijden als kaarten achter elkaar — duimen, opslaan, volgende. Hele speelronde ingevuld in een halve minuut.
+
 ## Aanmeldingen & goedkeuring
 
 Iedereen kan zich aanmelden via de loginpagina. Zo verloopt de communicatie:
