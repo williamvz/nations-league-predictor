@@ -56,9 +56,18 @@ export default function Layout({ children }) {
     }
     poll();
     const t = setInterval(poll, 60_000);
+    // instant feedback after saving a prediction/bonus/etc.
+    let debounce = null;
+    const onActivity = () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(poll, 400); // give the backend a beat to finish achievement checks
+    };
+    window.addEventListener('nlpool:activity', onActivity);
     return () => {
       stop = true;
       clearInterval(t);
+      clearTimeout(debounce);
+      window.removeEventListener('nlpool:activity', onActivity);
     };
   }, []);
 
