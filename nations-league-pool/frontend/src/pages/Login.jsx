@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { ErrorNote } from '../components/ui';
+import { useT } from '../i18n';
+import { LANGUAGES } from '../i18n/translations';
 
 export default function Login() {
+  const { t, lang, setLang } = useT();
   const { login, register } = useAuth();
   const [mode, setMode] = useState('login');
   const [hasInviteCode, setHasInviteCode] = useState(false);
@@ -32,7 +35,7 @@ export default function Login() {
         const d = await register(form);
         if (d.pending) {
           setMode('login');
-          setNotice('Aanmelding ontvangen! ⏳ Zodra William je goedkeurt kun je hier inloggen.');
+          setNotice(t('login.pending'));
         }
       }
     } catch (err) {
@@ -50,7 +53,20 @@ export default function Login() {
           <h1 className="text-3xl font-black tracking-tight">
             Nations League <span className="text-oranje-500">Pool</span>
           </h1>
-          <p className="mt-1 text-sm text-emerald-50/50">2026/27 · League A · voorspel & win 🇳🇱</p>
+          <p className="mt-1 text-sm text-emerald-50/50">{t('login.subtitle')}</p>
+          <div className="mt-3 flex justify-center gap-1">
+            {LANGUAGES.map((l) => (
+              <button
+                key={l.code}
+                type="button"
+                title={l.label}
+                onClick={() => { localStorage.setItem('nlpool_lang_prelogin', l.code); setLang(l.code); }}
+                className={`rounded-lg px-1.5 py-0.5 text-lg ${lang === l.code ? 'bg-oranje-500/25 ring-1 ring-oranje-500' : 'opacity-50 hover:opacity-100'}`}
+              >
+                {l.flag}
+              </button>
+            ))}
+          </div>
         </div>
 
         <form className="card space-y-3 p-5" onSubmit={submit}>
@@ -61,7 +77,7 @@ export default function Login() {
           )}
           <input
             className="input"
-            placeholder="Gebruikersnaam"
+            placeholder={t('login.username')}
             value={form.username}
             onChange={(e) => set('username', e.target.value)}
             autoCapitalize="none"
@@ -71,7 +87,7 @@ export default function Login() {
           <input
             className="input"
             type="password"
-            placeholder="Wachtwoord"
+            placeholder={t('login.password')}
             value={form.password}
             onChange={(e) => set('password', e.target.value)}
             autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
@@ -81,28 +97,26 @@ export default function Login() {
             <>
               <input
                 className="input"
-                placeholder="Weergavenaam (bijv. Pepijn)"
+                placeholder={t('login.displayName')}
                 value={form.display_name}
                 onChange={(e) => set('display_name', e.target.value)}
               />
               {hasInviteCode && (
                 <input
                   className="input"
-                  placeholder="Uitnodigingscode (optioneel)"
+                  placeholder={t('login.inviteCode')}
                   value={form.invite_code}
                   onChange={(e) => set('invite_code', e.target.value)}
                 />
               )}
               <p className="text-xs text-emerald-50/40">
-                {hasInviteCode
-                  ? 'Met een geldige code doe je direct mee; zonder code keurt de beheerder je aanmelding eerst goed.'
-                  : 'Na je aanmelding keurt de beheerder je account goed — daarna kun je inloggen.'}
+                {hasInviteCode ? t('login.inviteHintWith') : t('login.inviteHintWithout')}
               </p>
             </>
           )}
           <ErrorNote error={error} />
           <button className="btn-primary w-full" disabled={busy}>
-            {busy ? 'Even geduld…' : mode === 'login' ? 'Inloggen' : 'Aanmelden'}
+            {busy ? t('common.wait') : mode === 'login' ? t('login.login') : t('login.register')}
           </button>
           <button
             type="button"
@@ -113,7 +127,7 @@ export default function Login() {
               setNotice(null);
             }}
           >
-            {mode === 'login' ? 'Nog geen account? Meld je aan →' : '← Terug naar inloggen'}
+            {mode === 'login' ? t('login.toRegister') : t('login.toLogin')}
           </button>
         </form>
       </div>

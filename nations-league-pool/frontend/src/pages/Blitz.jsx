@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { api } from '../services/api';
 import { Spinner } from '../components/ui';
-import { fmtDay, fmtTime, matchContext } from '../utils/format';
+import { fmtDay, fmtTime } from '../utils/format';
+import { useT, matchContextT } from '../i18n';
 
 function BigStepper({ value, onChange }) {
   return (
@@ -20,6 +21,7 @@ function BigStepper({ value, onChange }) {
  * scores, save, next. A whole matchday done in half a minute.
  */
 export default function Blitz() {
+  const { t, tn } = useT();
   const navigate = useNavigate();
   const [queue, setQueue] = useState(null);
   const [idx, setIdx] = useState(0);
@@ -74,12 +76,12 @@ export default function Blitz() {
       <div className="flex min-h-[70vh] flex-col items-center justify-center text-center">
         <div className="text-6xl">{queue.length === 0 ? '😎' : '🎉'}</div>
         <h1 className="mt-4 text-2xl font-black">
-          {queue.length === 0 ? 'Alles is al ingevuld!' : `Klaar! ${saved} voorspelling${saved === 1 ? '' : 'en'} opgeslagen`}
+          {queue.length === 0 ? t('blitz.allDone') : t('blitz.done', { n: saved })}
         </h1>
         <p className="mt-2 text-emerald-50/50">
-          {queue.length === 0 ? 'Er staan geen open wedstrijden voor je klaar.' : 'Niets kan je nog verrassen. Behalve de uitslagen.'}
+          {queue.length === 0 ? t('blitz.noneOpen') : t('blitz.noSurprise')}
         </p>
-        <button className="btn-primary mt-6" onClick={() => navigate('/wedstrijden')}>Naar de wedstrijden</button>
+        <button className="btn-primary mt-6" onClick={() => navigate('/wedstrijden')}>{t('blitz.toMatches')}</button>
       </div>
     );
   }
@@ -89,7 +91,7 @@ export default function Blitz() {
   return (
     <div className="flex min-h-[75vh] flex-col">
       <div className="mb-4 flex items-center justify-between text-sm text-emerald-50/50">
-        <span>⚡ Blitz-invullen</span>
+        <span>{t('blitz.title')}</span>
         <span className="font-bold tabular-nums">{idx + 1} / {queue.length}</span>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
@@ -98,19 +100,19 @@ export default function Blitz() {
 
       <div className="card mt-4 flex flex-1 flex-col items-center justify-center gap-5 p-6 text-center">
         <div className="text-xs text-emerald-50/50">
-          {matchContext(match)} · {fmtDay(match.kickoff_utc)} {fmtTime(match.kickoff_utc)}
+          {matchContextT(t, match)} · {fmtDay(match.kickoff_utc)} {fmtTime(match.kickoff_utc)}
         </div>
 
         <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3">
           <div className="flex flex-col items-center gap-2">
             <span className="text-6xl">{match.home_flag}</span>
-            <span className="font-bold">{match.home_name}</span>
+            <span className="font-bold">{tn(match.home_code, match.home_name)}</span>
             <BigStepper value={home} onChange={setHome} />
           </div>
           <span className="text-3xl font-black text-emerald-50/30">–</span>
           <div className="flex flex-col items-center gap-2">
             <span className="text-6xl">{match.away_flag}</span>
-            <span className="font-bold">{match.away_name}</span>
+            <span className="font-bold">{tn(match.away_code, match.away_name)}</span>
             <BigStepper value={away} onChange={setAway} />
           </div>
         </div>
@@ -123,15 +125,15 @@ export default function Blitz() {
             disabled={jokerTaken}
             onChange={(e) => setJoker(e.target.checked)}
           />
-          🃏 Joker {jokerTaken ? '(al gebruikt deze speelronde)' : '— dubbele punten'}
+          {jokerTaken ? t('blitz.jokerUsed') : t('blitz.joker')}
         </label>
 
         {error && <div className="text-sm text-red-400">{error}</div>}
 
         <div className="flex w-full gap-2">
-          <button className="btn-ghost flex-1" onClick={() => submit(false)} disabled={busy}>Overslaan</button>
+          <button className="btn-ghost flex-1" onClick={() => submit(false)} disabled={busy}>{t('blitz.skip')}</button>
           <button className="btn-primary flex-[2]" onClick={() => submit(true)} disabled={busy}>
-            {busy ? 'Opslaan…' : 'Opslaan & volgende →'}
+            {busy ? t('common.saving') : t('blitz.saveNext')}
           </button>
         </div>
       </div>

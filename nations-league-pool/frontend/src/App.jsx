@@ -1,5 +1,8 @@
+import { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { LanguageProvider, useT } from './i18n';
+import { api } from './services/api';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Home from './pages/Home';
@@ -19,6 +22,23 @@ import { Spinner } from './components/ui';
 
 function Shell() {
   const { user, loading } = useAuth();
+  const { setLang } = useT();
+
+  // the account's language follows the user across devices; an explicit
+  // pre-login choice on this device wins once and is saved to the account
+  useEffect(() => {
+    if (!user) return;
+    const prelogin = localStorage.getItem('nlpool_lang_prelogin');
+    if (prelogin && prelogin !== user.language) {
+      localStorage.removeItem('nlpool_lang_prelogin');
+      setLang(prelogin);
+      api.updateMe({ language: prelogin }).catch(() => {});
+    } else {
+      localStorage.removeItem('nlpool_lang_prelogin');
+      if (user.language) setLang(user.language);
+    }
+  }, [user, setLang]);
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -64,9 +84,11 @@ export default function App() {
   // with zero server-side path configuration.
   return (
     <HashRouter>
-      <AuthProvider>
-        <Shell />
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <Shell />
+        </AuthProvider>
+      </LanguageProvider>
     </HashRouter>
   );
 }

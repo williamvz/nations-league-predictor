@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { countdownParts } from '../utils/format';
+import { useT } from '../i18n';
 
-export function Spinner({ label = 'Laden…' }) {
+export function Spinner({ label }) {
+  const { t } = useT();
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-16 text-emerald-50/60">
       <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/10 border-t-oranje-500" />
-      <span className="text-sm">{label}</span>
+      <span className="text-sm">{label || t('common.loading')}</span>
     </div>
   );
 }
@@ -29,19 +31,20 @@ export function LiveDot() {
 }
 
 export function Countdown({ iso, prefix = '' }) {
+  const { t } = useT();
   const [, tick] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => tick((n) => n + 1), 1000);
-    return () => clearInterval(t);
+    const timer = setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(timer);
   }, []);
   const p = countdownParts(iso);
-  if (!p) return <span className="text-red-400">begonnen</span>;
+  if (!p) return <span className="text-red-400">{t('common.started')}</span>;
 
   let text;
   let cls = 'text-emerald-50/70';
-  if (p.days > 0) text = `${p.days}d ${p.hours}u`;
+  if (p.days > 0) text = `${p.days}${t('common.dayShort')} ${p.hours}${t('common.hourShort')}`;
   else if (p.totalHours >= 1) {
-    text = `${p.hours}u ${String(p.minutes).padStart(2, '0')}m`;
+    text = `${p.hours}${t('common.hourShort')} ${String(p.minutes).padStart(2, '0')}m`;
     cls = 'text-oranje-300';
   } else {
     text = `${p.minutes}:${String(p.seconds).padStart(2, '0')}`;

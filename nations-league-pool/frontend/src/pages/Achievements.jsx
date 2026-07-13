@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { Spinner } from '../components/ui';
+import { useT } from '../i18n';
 
-const RARITY = {
-  common: { label: 'Gewoon', cls: 'text-emerald-50/50' },
-  uncommon: { label: 'Bijzonder', cls: 'text-emerald-300' },
-  rare: { label: 'Zeldzaam', cls: 'text-sky-300' },
-  legendary: { label: 'Legendarisch', cls: 'text-oranje-300' },
-};
+const RARITY_CLS = { common: 'text-emerald-50/50', uncommon: 'text-emerald-300', rare: 'text-sky-300', legendary: 'text-oranje-300' };
 
 export default function Achievements() {
+  const { t, ach } = useT();
   const [list, setList] = useState(null);
 
   useEffect(() => {
@@ -22,7 +19,7 @@ export default function Achievements() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-black">Prestaties</h1>
+        <h1 className="text-2xl font-black">{t('ach.title')}</h1>
         <span className="chip bg-oranje-500/15 text-oranje-300">{unlocked}/{list.length}</span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-white/5">
@@ -36,10 +33,10 @@ export default function Achievements() {
             <div key={a.key} className={`card flex items-center gap-3 p-4 ${done ? 'border-oranje-500/20' : 'opacity-60'}`}>
               <div className={`text-3xl ${done ? '' : 'grayscale'}`}>{done ? a.icon : '🔒'}</div>
               <div className="min-w-0 flex-1">
-                <div className="font-bold">{done ? a.name : '???'}</div>
-                <div className="text-sm text-emerald-50/50">{a.description}</div>
-                <div className={`text-xs ${RARITY[a.rarity].cls}`}>
-                  {RARITY[a.rarity].label} · {a.unlock_percentage}% heeft deze
+                <div className="font-bold">{done ? (ach(a.key)?.[0] || a.name) : '???'}</div>
+                <div className="text-sm text-emerald-50/50">{ach(a.key)?.[1] || a.description}</div>
+                <div className={`text-xs ${RARITY_CLS[a.rarity]}`}>
+                  {t(`ach.rarity.${a.rarity}`)} · {t('ach.has', { pct: a.unlock_percentage })}
                 </div>
               </div>
             </div>

@@ -7,8 +7,8 @@ export function computeUserStats(userId) {
   const rows = db.prepare(`
     SELECT p.home_goals, p.away_goals, p.points, p.is_joker,
            m.home_score, m.away_score, m.home_team_id, m.away_team_id, m.stage,
-           th.name_nl AS home_name, th.flag AS home_flag,
-           ta.name_nl AS away_name, ta.flag AS away_flag,
+           th.name_nl AS home_name, th.flag AS home_flag, th.code AS home_team_code,
+           ta.name_nl AS away_name, ta.flag AS away_flag, ta.code AS away_team_code,
            m.id AS match_id
     FROM predictions p
     JOIN matches m ON m.id = p.match_id
@@ -42,8 +42,8 @@ export function computeUserStats(userId) {
 
     // base points (without joker) so team affinity isn't skewed by joker luck
     const base = calculatePoints(r.home_goals, r.away_goals, r.home_score, r.away_score, 1, false);
-    for (const [teamId, name, flag] of [[r.home_team_id, r.home_name, r.home_flag], [r.away_team_id, r.away_name, r.away_flag]]) {
-      if (!perTeam.has(teamId)) perTeam.set(teamId, { name, flag, points: 0, matches: 0 });
+    for (const [teamId, name, flag, code] of [[r.home_team_id, r.home_name, r.home_flag, r.home_team_code], [r.away_team_id, r.away_name, r.away_flag, r.away_team_code]]) {
+      if (!perTeam.has(teamId)) perTeam.set(teamId, { name, flag, code, points: 0, matches: 0 });
       const t = perTeam.get(teamId);
       t.points += base;
       t.matches += 1;

@@ -7,7 +7,9 @@ import { notifyHomeAssistant } from '../services/ha.js';
 
 const router = Router();
 
-const PUBLIC_USER = 'id, username, display_name, is_admin, avatar, favorite_team_id, must_change_password';
+const PUBLIC_USER = 'id, username, display_name, is_admin, avatar, favorite_team_id, must_change_password, language';
+
+const LANGUAGES = ['nl', 'en', 'fr', 'es', 'de', 'it'];
 
 function sanitizeUsername(name) {
   return String(name || '').trim();
@@ -92,6 +94,10 @@ router.put('/me', authenticate, (req, res) => {
     const name = sanitizeUsername(display_name);
     if (name.length < 2) return res.status(400).json({ error: 'Naam te kort' });
     db.prepare('UPDATE users SET display_name = ? WHERE id = ?').run(name.slice(0, 30), req.user.id);
+  }
+  if (req.body.language !== undefined) {
+    if (!LANGUAGES.includes(req.body.language)) return res.status(400).json({ error: 'Onbekende taal' });
+    db.prepare('UPDATE users SET language = ? WHERE id = ?').run(req.body.language, req.user.id);
   }
   if (favorite_team_id !== undefined) {
     const teamId = favorite_team_id === null ? null : Number(favorite_team_id);

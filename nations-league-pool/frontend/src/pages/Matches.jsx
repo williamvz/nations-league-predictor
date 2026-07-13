@@ -3,16 +3,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { Spinner, Modal, LiveDot } from '../components/ui';
 import MatchCard from '../components/MatchCard';
-import { groupBy, fmtFull, fmtPoints, roundLabel, matchContext } from '../utils/format';
+import { groupBy, fmtFull, fmtPoints } from '../utils/format';
+import { useT, roundLabelT, matchContextT } from '../i18n';
 
 const FILTERS = [
-  { key: 'alle', label: 'Alle' },
-  { key: 'open', label: 'Nog invullen' },
-  { key: 'ingevuld', label: 'Ingevuld' },
-  { key: 'afgelopen', label: 'Afgelopen' },
+  { key: 'alle', label: 'matches.all' },
+  { key: 'open', label: 'matches.todo' },
+  { key: 'ingevuld', label: 'matches.filled' },
+  { key: 'afgelopen', label: 'matches.done' },
 ];
 
 export default function Matches() {
+  const { t } = useT();
   const [matches, setMatches] = useState(null);
   const [filter, setFilter] = useState('alle');
   const navigate = useNavigate();
@@ -51,11 +53,11 @@ export default function Matches() {
     ingevuld: matches.filter((m) => !m.is_locked && m.prediction).length,
     afgelopen: matches.filter((m) => m.status === 'finished').length,
   };
-  const byRound = groupBy(filtered, roundLabel);
+  const byRound = groupBy(filtered, (m) => roundLabelT(t, m));
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-black">Wedstrijden</h1>
+      <h1 className="text-2xl font-black">{t('matches.title')}</h1>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         {FILTERS.map((f) => (
@@ -64,7 +66,7 @@ export default function Matches() {
             onClick={() => setFilter(f.key)}
             className={`chip whitespace-nowrap ${filter === f.key ? 'bg-oranje-500 text-pitch-950' : 'bg-white/5 text-emerald-50/60'}`}
           >
-            {f.label} ({counts[f.key]})
+            {t(f.label)} ({counts[f.key]})
           </button>
         ))}
         {counts.open > 0 && (
@@ -75,7 +77,7 @@ export default function Matches() {
       </div>
 
       {filtered.length === 0 && (
-        <p className="py-10 text-center text-emerald-50/40">Geen wedstrijden in deze categorie 🎉</p>
+        <p className="py-10 text-center text-emerald-50/40">{t('matches.empty')}</p>
       )}
 
       {[...byRound.entries()].map(([label, list]) => (
@@ -99,7 +101,7 @@ export default function Matches() {
  * → columns, away goals → rows). Darker orange = more people picked it; the
  * real result gets a ring once known. Only visible after kickoff.
  */
-function ConsensusHeatmap({ predictions, homeName, awayName, actual }) {
+function ConsensusHeatmap({ t, predictions, homeName, awayName, actual }) {
   const cap = (n) => Math.min(n, 4); // 4 means "4+"
   const grid = new Map();
   for (const p of predictions) {
@@ -111,7 +113,7 @@ function ConsensusHeatmap({ predictions, homeName, awayName, actual }) {
 
   return (
     <div className="card p-3">
-      <h3 className="mb-2 text-sm font-bold text-emerald-50/60">🌡️ Consensus — wat dacht de groep?</h3>
+      <h3 className="mb-2 text-sm font-bold text-emerald-50/60">🌡️ {t('matches.consensus')}</h3>
       <div className="flex justify-center">
         <table className="border-separate border-spacing-1">
           <thead>
@@ -153,13 +155,14 @@ function ConsensusHeatmap({ predictions, homeName, awayName, actual }) {
         </table>
       </div>
       <p className="mt-1 text-center text-[10px] text-emerald-50/40">
-        → {homeName} · donkerder = vaker voorspeld{actual ? ' · groene ring = de uitslag' : ''}
+        → {homeName} · {t('matches.consensusLegend')}{actual ? ` · ${t('matches.consensusRing')}` : ''}
       </p>
     </div>
   );
 }
 
 function MatchDetail({ id, onClose }) {
+  const { t, tn } = useT();
   const [detail, setDetail] = useState(null);
 
   useEffect(() => {
@@ -178,7 +181,7 @@ function MatchDetail({ id, onClose }) {
   const m = detail;
 
   return (
-    <Modal open={!!id} onClose={onClose} title={m ? `${m.home_flag} ${m.home_name} – ${m.away_name} ${m.away_flag}` : 'Laden…'} wide>
+    <Modal open={!!id} onClose={onClose} title={m ? `${m.home_flag} ${tn(m.home_code, m.home_name)} – ${tn(m.away_code, m.away_name)} ${m.away_flag}` : t('common.loading')} wide>
       {!m ? (
         <Spinner />
       ) : (
@@ -192,18 +195,18 @@ function MatchDetail({ id, onClose }) {
             ) : (
               <div className="text-emerald-50/60">{fmtFull(m.kickoff_utc)}</div>
             )}
-            <div className="mt-1 text-xs text-emerald-50/40">{matchContext(m)}</div>
+            <div className="mt-1 text-xs text-emerald-50/40">{matchContextT(t, m)}</div>
           </div>
 
           {m.goals?.length > 0 && (
             <div className="card p-3">
-              <h3 className="mb-2 text-sm font-bold text-emerald-50/60">⚽ Doelpunten</h3>
+              <h3 className="mb-2 text-sm font-bold text-emerald-50/60">⚽ {t('matches.goals')}</h3>
               {m.goals.map((g, i) => (
                 <div key={i} className="flex items-center gap-2 py-0.5 text-sm">
                   <span className="w-10 text-emerald-50/40">{g.minute || ''}</span>
                   <span>{g.player_name}</span>
-                  {g.event_type === 'own_goal' && <span className="text-xs text-red-400">(e.d.)</span>}
-                  {g.event_type === 'penalty' && <span className="text-xs text-emerald-50/40">(pen.)</span>}
+                  {g.event_type === 'own_goal' && <span className="text-xs text-red-400">{t('matches.ownGoal')}</span>}
+                  {g.event_type === 'penalty' && <span className="text-xs text-emerald-50/40">{t('matches.penalty')}</span>}
                   <span className="ml-auto text-xs text-emerald-50/40">{g.team_code}</span>
                 </div>
               ))}
@@ -211,14 +214,14 @@ function MatchDetail({ id, onClose }) {
           )}
 
           {m.all_predictions && m.all_predictions.length > 1 && (
-            <ConsensusHeatmap predictions={m.all_predictions} homeName={m.home_name} awayName={m.away_name}
+            <ConsensusHeatmap t={t} predictions={m.all_predictions} homeName={tn(m.home_code, m.home_name)} awayName={tn(m.away_code, m.away_name)}
               actual={m.home_score != null ? { h: m.home_score, a: m.away_score } : null} />
           )}
 
           {m.all_predictions && (
             <div className="card p-3">
-              <h3 className="mb-2 text-sm font-bold text-emerald-50/60">👥 Alle voorspellingen</h3>
-              {m.all_predictions.length === 0 && <p className="text-sm text-emerald-50/40">Niemand heeft voorspeld.</p>}
+              <h3 className="mb-2 text-sm font-bold text-emerald-50/60">👥 {t('matches.allPredictions')}</h3>
+              {m.all_predictions.length === 0 && <p className="text-sm text-emerald-50/40">{t('matches.nobody')}</p>}
               {m.all_predictions.map((p, i) => (
                 <div key={i} className="flex items-center gap-2 py-1 text-sm">
                   <span>{p.avatar}</span>

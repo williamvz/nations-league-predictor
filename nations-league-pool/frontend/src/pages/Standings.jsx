@@ -2,15 +2,17 @@ import { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { Spinner, Modal, LiveDot } from '../components/ui';
 import { fmtDay, fmtTime } from '../utils/format';
+import { useT } from '../i18n';
 
-function FormBadge({ letter }) {
+function FormBadge({ letter, t }) {
   const live = letter.endsWith('*');
   const l = letter[0];
   const cls = l === 'W' ? 'bg-emerald-500/20 text-emerald-300' : l === 'G' ? 'bg-white/10 text-emerald-50/60' : 'bg-red-500/20 text-red-300';
-  return <span className={`inline-flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold ${cls} ${live ? 'animate-pulse-live' : ''}`}>{l}</span>;
+  return <span className={`inline-flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold ${cls} ${live ? 'animate-pulse-live' : ''}`}>{t(`form.${l}`)}</span>;
 }
 
 export default function Standings() {
+  const { t, tn } = useT();
   const [groups, setGroups] = useState(null);
   const [scorers, setScorers] = useState(null);
   const [team, setTeam] = useState(null);
@@ -31,13 +33,13 @@ export default function Standings() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-black">Stand · League A</h1>
+      <h1 className="text-2xl font-black">{t('stand.title')}</h1>
 
       <div className="grid gap-4 lg:grid-cols-2">
         {Object.entries(groups).map(([name, rows]) => (
           <div key={name} className="card overflow-hidden">
             <div className="flex items-center justify-between bg-white/[0.03] px-4 py-2">
-              <h2 className="font-bold">Groep {name}</h2>
+              <h2 className="font-bold">{t('stand.group', { g: name })}</h2>
               {rows.some((r) => r.form.some((f) => f.endsWith('*'))) && <LiveDot />}
             </div>
             <table className="w-full text-sm">
@@ -51,7 +53,7 @@ export default function Standings() {
                   <th className="hidden text-center font-normal sm:table-cell">V</th>
                   <th className="text-center font-normal">+/−</th>
                   <th className="pr-2 text-center font-bold">P</th>
-                  <th className="pr-4 text-right font-normal">Vorm</th>
+                  <th className="pr-4 text-right font-normal">{t('stand.form')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -64,7 +66,7 @@ export default function Standings() {
                     <td className="py-2 pl-4 text-emerald-50/50">{r.position}</td>
                     <td className="font-semibold">
                       <span className="mr-1.5">{r.flag}</span>
-                      {r.name_nl}
+                      {tn(r.code, r.name_nl)}
                       {r.position === 1 && <span className="ml-1 text-xs">🏆</span>}
                       {r.position === 4 && <span className="ml-1 text-xs text-red-400">▼</span>}
                     </td>
@@ -75,14 +77,14 @@ export default function Standings() {
                     <td className="text-center tabular-nums text-emerald-50/60">{r.goal_diff > 0 ? '+' : ''}{r.goal_diff}</td>
                     <td className="pr-2 text-center font-black tabular-nums">{r.points}</td>
                     <td className="pr-4 text-right">
-                      <span className="inline-flex gap-0.5">{r.form.slice(-5).map((f, i) => <FormBadge key={i} letter={f} />)}</span>
+                      <span className="inline-flex gap-0.5">{r.form.slice(-5).map((f, i) => <FormBadge key={i} letter={f} t={t} />)}</span>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
             <div className="px-4 py-2 text-[11px] text-emerald-50/30">
-              🏆 groepswinnaar → kwartfinales · ▼ nummer 4 degradeert naar League B
+              {t('stand.legend')}
             </div>
           </div>
         ))}
@@ -90,9 +92,9 @@ export default function Standings() {
 
       {/* top scorers */}
       <div className="card p-4">
-        <h2 className="mb-3 font-bold">👟 Topscorers</h2>
+        <h2 className="mb-3 font-bold">👟 {t('stand.scorers')}</h2>
         {(!scorers || scorers.length === 0) && (
-          <p className="text-sm text-emerald-50/40">Nog geen doelpunten — de topscorerslijst vult zichzelf automatisch zodra er gespeeld wordt.</p>
+          <p className="text-sm text-emerald-50/40">{t('stand.noGoals')}</p>
         )}
         <div className="space-y-1">
           {scorers?.slice(0, 15).map((s, i) => (
@@ -100,7 +102,7 @@ export default function Standings() {
               <span className="w-6 text-center font-bold text-emerald-50/50">{i + 1}</span>
               <span className="text-lg">{s.team_flag || '⚽'}</span>
               <span className="flex-1 font-semibold">{s.player_name}</span>
-              <span className="text-xs text-emerald-50/40">{s.team_name || ''}</span>
+              <span className="text-xs text-emerald-50/40">{s.team_code ? tn(s.team_code, s.team_name) : (s.team_name || '')}</span>
               <span className="chip bg-oranje-500/15 font-black text-oranje-300">{s.goals}</span>
             </div>
           ))}
@@ -113,25 +115,26 @@ export default function Standings() {
 }
 
 function TeamModal({ team, onClose }) {
+  const { t, tn } = useT();
   if (!team) return null;
-  const t = team.team;
+  const tm = team.team;
   return (
-    <Modal open onClose={onClose} title={`${t.flag} ${t.name_nl}`}>
+    <Modal open onClose={onClose} title={`${tm.flag} ${tn(tm.code, tm.name_nl)}`}>
       <div className="space-y-4">
         {team.standing && (
           <div className="grid grid-cols-4 gap-2 text-center">
-            <div className="card p-2"><div className="text-lg font-black">#{team.standing.position}</div><div className="text-[10px] text-emerald-50/40">in groep {t.group_name}</div></div>
-            <div className="card p-2"><div className="text-lg font-black">{team.standing.points}</div><div className="text-[10px] text-emerald-50/40">punten</div></div>
-            <div className="card p-2"><div className="text-lg font-black">{team.standing.goals_for}</div><div className="text-[10px] text-emerald-50/40">goals voor</div></div>
-            <div className="card p-2"><div className="text-lg font-black">{team.standing.goals_against}</div><div className="text-[10px] text-emerald-50/40">goals tegen</div></div>
+            <div className="card p-2"><div className="text-lg font-black">#{team.standing.position}</div><div className="text-[10px] text-emerald-50/40">{t('stand.inGroup', { g: tm.group_name })}</div></div>
+            <div className="card p-2"><div className="text-lg font-black">{team.standing.points}</div><div className="text-[10px] text-emerald-50/40">{t('stand.points')}</div></div>
+            <div className="card p-2"><div className="text-lg font-black">{team.standing.goals_for}</div><div className="text-[10px] text-emerald-50/40">{t('stand.goalsFor')}</div></div>
+            <div className="card p-2"><div className="text-lg font-black">{team.standing.goals_against}</div><div className="text-[10px] text-emerald-50/40">{t('stand.goalsAgainst')}</div></div>
           </div>
         )}
 
         {team.next && (
           <div>
-            <h3 className="mb-1 text-sm font-bold text-emerald-50/60">Volgende wedstrijd</h3>
+            <h3 className="mb-1 text-sm font-bold text-emerald-50/60">{t('stand.next')}</h3>
             <div className="card p-3 text-sm">
-              {team.next.home_flag} {team.next.home_name} – {team.next.away_name} {team.next.away_flag}
+              {team.next.home_flag} {tn(team.next.home_code, team.next.home_name)} – {tn(team.next.away_code, team.next.away_name)} {team.next.away_flag}
               <div className="text-xs text-emerald-50/40">{fmtDay(team.next.kickoff_utc)} · {fmtTime(team.next.kickoff_utc)}</div>
             </div>
           </div>
@@ -139,11 +142,11 @@ function TeamModal({ team, onClose }) {
 
         {team.recent.length > 0 && (
           <div>
-            <h3 className="mb-1 text-sm font-bold text-emerald-50/60">Laatste wedstrijden</h3>
+            <h3 className="mb-1 text-sm font-bold text-emerald-50/60">{t('stand.recent')}</h3>
             <div className="space-y-1">
               {team.recent.map((m) => (
                 <div key={m.id} className="flex justify-between rounded-lg bg-white/[0.03] p-2 text-sm">
-                  <span>{m.home_flag} {m.home_name} – {m.away_name} {m.away_flag}</span>
+                  <span>{m.home_flag} {tn(m.home_code, m.home_name)} – {tn(m.away_code, m.away_name)} {m.away_flag}</span>
                   <b className="tabular-nums">{m.home_score}–{m.away_score}</b>
                 </div>
               ))}
@@ -153,7 +156,7 @@ function TeamModal({ team, onClose }) {
 
         {team.top_scorers.length > 0 && (
           <div>
-            <h3 className="mb-1 text-sm font-bold text-emerald-50/60">Doelpuntenmakers</h3>
+            <h3 className="mb-1 text-sm font-bold text-emerald-50/60">{t('stand.teamScorers')}</h3>
             {team.top_scorers.map((s, i) => (
               <div key={i} className="flex justify-between p-1 text-sm">
                 <span>{s.player_name}</span><b>{s.goals}</b>
@@ -164,7 +167,7 @@ function TeamModal({ team, onClose }) {
 
         {team.picked_as_group_winner_by.length > 0 && (
           <div>
-            <h3 className="mb-1 text-sm font-bold text-emerald-50/60">Als groepswinnaar getipt door</h3>
+            <h3 className="mb-1 text-sm font-bold text-emerald-50/60">{t('stand.pickedBy')}</h3>
             <div className="flex flex-wrap gap-1">
               {team.picked_as_group_winner_by.map((u, i) => (
                 <span key={i} className="chip bg-white/5">{u.avatar} {u.display_name}</span>

@@ -84,8 +84,8 @@ export function teamInsights(teamId) {
   if (!team) return null;
 
   const played = db.prepare(`
-    SELECT m.*, th.name_nl AS home_name, th.flag AS home_flag,
-           ta.name_nl AS away_name, ta.flag AS away_flag
+    SELECT m.*, th.name_nl AS home_name, th.flag AS home_flag, th.code AS home_code,
+           ta.name_nl AS away_name, ta.flag AS away_flag, ta.code AS away_code
     FROM matches m
     JOIN teams th ON th.id = m.home_team_id
     JOIN teams ta ON ta.id = m.away_team_id
@@ -94,8 +94,8 @@ export function teamInsights(teamId) {
   `).all(teamId, teamId);
 
   const next = db.prepare(`
-    SELECT m.*, th.name_nl AS home_name, th.flag AS home_flag,
-           ta.name_nl AS away_name, ta.flag AS away_flag
+    SELECT m.*, th.name_nl AS home_name, th.flag AS home_flag, th.code AS home_code,
+           ta.name_nl AS away_name, ta.flag AS away_flag, ta.code AS away_code
     FROM matches m
     JOIN teams th ON th.id = m.home_team_id
     JOIN teams ta ON ta.id = m.away_team_id

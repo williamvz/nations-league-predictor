@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.0
+
+- 🌍 **Meertalig**: de app is nu beschikbaar in het Nederlands, Engels, Frans, Spaans, Duits en Italiaans. Kies je taal op je profiel (of al op de loginpagina); de keuze wordt op je account bewaard en reist mee naar al je apparaten. Landnamen, datums, prestaties en bonusvragen worden meevertaald. De Sportkrant blijft — uiteraard — in het Nederlands verschijnen. 🇳🇱
+
 ## 1.5.0
 
 - 📰 **De Sportkrant**: automatisch geschreven verslag na elke speelronde — dagwinnaar, joker-helden en -drama's, stijgers/dalers, de stunt van de ronde en wie er vergat in te vullen. Met pushmelding en deelknop.
