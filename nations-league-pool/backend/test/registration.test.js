@@ -20,10 +20,12 @@ seed();
 const express = (await import('express')).default;
 const authRoutes = (await import('../src/routes/auth.js')).default;
 const adminRoutes = (await import('../src/routes/admin.js')).default;
+const notificationsRoutes = (await import('../src/routes/notifications.js')).default;
 const app = express();
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationsRoutes);
 const server = app.listen(0);
 const base = `http://localhost:${server.address().port}/api`;
 
@@ -72,6 +74,13 @@ test('register → pending → cannot log in → approve → can log in', async 
   assert.equal(login.status, 200);
   assert.ok(login.data.token);
 
+  // the actioned registration notification must not keep reappearing in the bell
+  const afterApprove = await call('/notifications', 'GET', undefined, adminToken);
+  assert.ok(
+    !afterApprove.data.notifications.some((n) => n.meta?.pending_user_id === pending.id),
+    'approved registration notification should disappear on reload'
+  );
+
   // reject flow: another registration, reject frees the username
   const reg2 = await call('/auth/register', 'POST', { username: 'grapjas', password: 'zomaar123' });
   assert.equal(reg2.status, 201);
@@ -80,6 +89,13 @@ test('register → pending → cannot log in → approve → can log in', async 
   const reject = await call(`/admin/users/${p2.id}/reject`, 'POST', undefined, adminToken);
   assert.equal(reject.status, 200);
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM users WHERE username = 'grapjas'").get().n, 0);
+
+  // same for reject: the notification should not linger either
+  const afterReject = await call('/notifications', 'GET', undefined, adminToken);
+  assert.ok(
+    !afterReject.data.notifications.some((n) => n.meta?.pending_user_id === p2.id),
+    'rejected registration notification should disappear on reload'
+  );
 
   // invite code fast-pass: set a code, register with it → immediate token
   const { setSetting } = await import('../src/db/database.js');
