@@ -18,7 +18,14 @@ export function listForUser(userId, limit = 25) {
            CASE WHEN r.notification_id IS NULL THEN 0 ELSE 1 END AS is_read
     FROM notifications n
     LEFT JOIN notification_reads r ON r.notification_id = n.id AND r.user_id = ?
-    WHERE n.user_id IS NULL OR n.user_id = ?
+    WHERE (n.user_id IS NULL OR n.user_id = ?)
+      AND (
+        json_extract(n.meta, '$.pending_user_id') IS NULL
+        OR EXISTS (
+          SELECT 1 FROM users u
+          WHERE u.id = json_extract(n.meta, '$.pending_user_id') AND u.status = 'pending'
+        )
+      )
     ORDER BY n.id DESC
     LIMIT ?
   `).all(userId, userId, limit);
