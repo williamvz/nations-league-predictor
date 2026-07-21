@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.1
+
+- Fix: een aanmelding die je al had goedgekeurd of afgewezen kon in de 🔔-melding blijven staan (met de Goedkeuren/Afwijzen-knoppen nog actief) en dook zo telkens weer op — bij het opnieuw openen van de melding, na een herlaad of op een ander apparaat. Afgehandelde aanmeldingen verdwijnen nu voorgoed uit de melding.
+
 ## 1.6.0
 
 - 🌍 **Meertalig**: de app is nu beschikbaar in het Nederlands, Engels, Frans, Spaans, Duits en Italiaans. Kies je taal op je profiel (of al op de loginpagina); de keuze wordt op je account bewaard en reist mee naar al je apparaten. Landnamen, datums, prestaties en bonusvragen worden meevertaald. De Sportkrant blijft — uiteraard — in het Nederlands verschijnen. 🇳🇱
