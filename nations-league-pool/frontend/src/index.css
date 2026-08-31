@@ -12,9 +12,24 @@ body {
   overscroll-behavior-y: none;
 }
 
-/* iPhone notch / home indicator */
+/* iPhone notch / home indicator.
+   The PWA runs fullscreen (viewport-fit=cover + black-translucent status bar),
+   so the page starts *behind* the iOS status bar and home indicator — anything
+   at the very top or bottom needs these insets to stay clear of them. */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Height of the sticky top bar, status-bar inset included. Layout.jsx measures
+   the real header and overwrites this; the fallback covers the first paint. */
+:root {
+  --app-header-h: calc(4rem + env(safe-area-inset-top, 0px));
+}
+.below-header {
+  top: var(--app-header-h);
 }
 
 @layer components {

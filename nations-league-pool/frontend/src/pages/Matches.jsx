@@ -82,7 +82,7 @@ export default function Matches() {
 
       {[...byRound.entries()].map(([label, list]) => (
         <section key={label} className="space-y-3">
-          <h2 className="sticky top-14 z-10 -mx-1 bg-pitch-950/90 px-1 py-1 font-bold text-emerald-50/70 backdrop-blur">
+          <h2 className="below-header sticky z-10 -mx-1 bg-pitch-950/90 px-1 py-1 font-bold text-emerald-50/70 backdrop-blur">
             {label}
           </h2>
           {list.map((m) => (

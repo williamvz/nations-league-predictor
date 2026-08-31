@@ -26,6 +26,22 @@ export default function Layout({ children }) {
   const [notifications, setNotifications] = useState([]);
   const [popup, setPopup] = useState(null);
   const seenRef = useRef(false);
+  const headerRef = useRef(null);
+
+  // publish the real top-bar height (status-bar inset included) so sticky
+  // content below it — round headers, the achievement popup — never ends up
+  // hidden underneath
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const apply = () =>
+      document.documentElement.style.setProperty('--app-header-h', `${el.offsetHeight}px`);
+    apply();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // poll notifications + fresh achievements (+ pending registrations for admins)
   useEffect(() => {
@@ -112,7 +128,10 @@ export default function Layout({ children }) {
   return (
     <div className="pitch-bg min-h-screen">
       {/* top bar */}
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-pitch-950/90 backdrop-blur">
+      <header
+        ref={headerRef}
+        className="safe-top sticky top-0 z-40 border-b border-white/5 bg-pitch-950/90 backdrop-blur"
+      >
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <button className="flex items-center gap-2" onClick={() => navigate('/')}>
             <span className="text-xl">🏆</span>
@@ -201,7 +220,7 @@ export default function Layout({ children }) {
 
       {/* achievement popup */}
       {popup && (
-        <div className="fixed inset-x-4 top-16 z-50 mx-auto max-w-sm">
+        <div className="below-header fixed inset-x-4 z-50 mx-auto mt-2 max-w-sm">
           <div className="card border-oranje-500/40 p-4 text-center shadow-2xl">
             <div className="text-3xl">{popup.icon}</div>
             <div className="mt-1 font-black text-oranje-300">{t('ach.unlocked')}</div>

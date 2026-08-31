@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.2
+
+- Fix: als je de app op je iPhone-beginscherm hebt gezet, liep de bovenbalk onder de iOS-statusbalk door — de klok stond dwars door "Nations League Pool" heen en de 🔔 en je avatar verdwenen achter het wifi- en batterijpictogram. De app houdt nu afstand van de notch/Dynamic Island (en van de home-indicator onderaan). De speelronde-koppen op Wedstrijden blijven daarbij netjes onder de bovenbalk plakken.
+
 ## 1.6.1
 
 - Fix: een aanmelding die je al had goedgekeurd of afgewezen kon in de 🔔-melding blijven staan (met de Goedkeuren/Afwijzen-knoppen nog actief) en dook zo telkens weer op — bij het opnieuw openen van de melding, na een herlaad of op een ander apparaat. Afgehandelde aanmeldingen verdwijnen nu voorgoed uit de melding.
