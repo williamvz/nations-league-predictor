@@ -42,7 +42,7 @@ export default function TV() {
   const rows = leaderboard.leaderboard;
 
   return (
-    <div className="pitch-bg min-h-screen p-6">
+    <div className="pitch-bg min-h-screen px-6 pb-[calc(1.5rem_+_env(safe-area-inset-bottom,0px))] pt-[calc(1.5rem_+_env(safe-area-inset-top,0px))]">
       <header className="mb-6 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3">
           <span className="text-3xl">🏆</span>
