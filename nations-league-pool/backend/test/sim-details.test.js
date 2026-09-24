@@ -81,3 +81,13 @@ test('events from the simulator include details for every live/finished match', 
   assert.ok(events.length > 0);
   for (const e of events) assert.ok(e.details?.stats?.length, e.providerId);
 });
+
+test('simulated commentary carries its real (time-compressed) moment', () => {
+  const m = db.prepare("SELECT * FROM matches WHERE status = 'finished' LIMIT 1").get();
+  const d = getDetails(m.id);
+  const kickoff = new Date(m.kickoff_utc).getTime();
+  const byMinute = [...d.commentary].sort((a, b) => a.seq - b.seq);
+  for (const c of byMinute) assert.ok(c.seen >= kickoff, 'not before kickoff');
+  // later minutes → later moments
+  for (let i = 1; i < byMinute.length; i++) assert.ok(byMinute[i].seen >= byMinute[i - 1].seen);
+});

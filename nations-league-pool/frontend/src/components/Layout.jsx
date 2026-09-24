@@ -184,7 +184,7 @@ export default function Layout({ children }) {
       </header>
 
       {demoMode && (
-        <div className="border-b border-purple-500/30 bg-purple-500/15 px-4 py-1.5 text-center text-xs font-semibold text-purple-200">
+        <div data-demo-banner className="border-b border-purple-500/30 bg-purple-500/15 px-4 py-1.5 text-center text-xs font-semibold text-purple-200">
           {t('demo.banner')} (<code>demo_mode</code>)
         </div>
       )}

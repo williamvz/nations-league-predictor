@@ -44,7 +44,7 @@ Goed om te weten:
 ## 🎇 Wedstrijddag-spektakel
 
 - **⚽ GOAL-flash**: valt er een doelpunt tijdens een live wedstrijd, dan neemt de app even het scherm over — vlag, doelpuntenmaker, nieuwe stand, confetti en een trilsignaal op je telefoon.
-- **📺 TV-modus** (*Meer → TV-modus*, of direct `/#/tv`): een fullscreen wedstrijddag-dashboard voor de tv of een muurtablet — grote live scoreborden met doelpuntenmakers en tikkende klok, de familieranglijst die live herschikt, één gecombineerd live-verslag van alle wedstrijden die bezig zijn (met de vlag van het land dat aan zet is en badges voor goals, kaarten, wissels…), en het komende programma. Ververst zichzelf; ideaal als Webpage-kaart in een Home Assistant-dashboard.
+- **📺 TV-modus** (*Meer → TV-modus* op een tablet, laptop of tv, of direct `/#/tv`; op telefoons staat de knop niet in het menu): een fullscreen wedstrijddag-dashboard voor de tv of een muurtablet — grote live scoreborden met doelpuntenmakers en tikkende klok, de familieranglijst die live herschikt, één gecombineerd live-verslag van alle wedstrijden die bezig zijn (met de vlag van het land dat aan zet is en badges voor goals, kaarten, wissels…), en het komende programma. Ververst zichzelf; ideaal als Webpage-kaart in een Home Assistant-dashboard.
 - **🏠 Automatiseringen**: de add-on vuurt events af op de Home Assistant-eventbus — bouw er je eigen lichtshow mee! Events: `nlpool_goal` (met `team_code`, `team`, `player`, `minute`, `score`) en `nlpool_result` (met `home`, `away`, `score`, `stage`). Voorbeeld — woonkamer oranje bij een goal van Nederland:
 
 ```yaml

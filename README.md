@@ -4,6 +4,37 @@ A prediction-pool app for the **UEFA Nations League 2026/27 (League A)** — the
 
 Runs as a **Home Assistant add-on** on a Raspberry Pi (or standalone with Docker). Mobile-first PWA in six languages (NL, EN, FR, ES, DE, IT).
 
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="docs/screenshots/home.png" width="250" alt="Home: your rank, live matches and your predictions"><br><sub>Home: your rank, live matches and your predictions</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/matches.png" width="250" alt="Matches: live scores, points per prediction, the group's split"><br><sub>Matches: live scores, points per prediction, the group's split</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/match-overview.png" width="250" alt="Match centre: timeline with goals, cards and subs"><br><sub>Match centre: timeline with goals, cards and subs</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><img src="docs/screenshots/match-stats.png" width="250" alt="Live team statistics"><br><sub>Live team statistics</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/match-lineups.png" width="250" alt="Line-ups with formation and substitutions"><br><sub>Line-ups with formation and substitutions</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/match-commentary.png" width="250" alt="Live commentary (translated to Dutch) with badges"><br><sub>Live commentary (translated to Dutch) with badges</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><img src="docs/screenshots/match-predictions.png" width="250" alt="Everyone's predictions and the consensus heatmap"><br><sub>Everyone's predictions and the consensus heatmap</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/leaderboard.png" width="250" alt="Leaderboard with live points while matches are on"><br><sub>Leaderboard with live points while matches are on</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/standings.png" width="250" alt="Group tables and top scorers, updated automatically"><br><sub>Group tables and top scorers, updated automatically</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><img src="docs/screenshots/sportkrant.png" width="250" alt="De Sportkrant: an auto-written recap after every matchday"><br><sub>De Sportkrant: an auto-written recap after every matchday</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/kristallen-bol.png" width="250" alt="Kristallen Bol: your personal prediction stats"><br><sub>Kristallen Bol: your personal prediction stats</sub></td>
+    <td></td>
+  </tr>
+</table>
+
+**TV mode:** a full-screen matchday dashboard for the living-room TV or a Home Assistant dashboard, with live scoreboards, the leaderboard reshuffling live, and one combined commentary feed of all matches with the flag of the team in action.
+
+<img src="docs/screenshots/tv.png" alt="TV mode: live scoreboards, live leaderboard and a combined commentary feed">
+
+<sub>Screenshots come from demo mode (a simulated season) and are generated automatically: `cd nations-league-pool/e2e && npm run screenshots`.</sub>
+
 ## ✨ What's new compared to the World Cup app
 
 | | WK Pool 2026 | Nations League Pool |
@@ -129,6 +160,7 @@ cd nations-league-pool
 - `frontend/src/utils/commentaryNl.test.js` pins the Dutch commentary translation against real ESPN lines.
 - `backend/test/espn-summary.test.js` pins the ESPN match-detail parser against `test/fixtures/espn-summary.json`.
 - `e2e/tests/*.spec.js` run in desktop and mobile Chrome. Failures leave a screenshot and trace in `e2e/test-results/` (`npx playwright show-trace …`).
+- `npm run screenshots` (in `e2e/`) regenerates the README screenshots in `docs/screenshots/`: it plays a fast demo season with predictions, then photographs the main screens (~5 min).
 - No Playwright browser downloaded? Point it at any Chromium: `PLAYWRIGHT_CHROMIUM=/usr/bin/chromium ./test.sh e2e`.
 
 ---

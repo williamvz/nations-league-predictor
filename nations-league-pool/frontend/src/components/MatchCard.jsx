@@ -84,11 +84,11 @@ export default function MatchCard({ match, onSaved, onOpenDetail }) {
       </div>
 
       <button className="flex w-full items-center justify-between gap-2" onClick={() => onOpenDetail?.(match)}>
-        <div className="flex flex-1 items-center justify-end gap-2 text-right">
-          <span className="truncate font-semibold">{tn(match.home_code, match.home_name)}</span>
-          <span className="text-2xl">{match.home_flag}</span>
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 text-right">
+          <span className="truncate text-sm font-semibold sm:text-base">{tn(match.home_code, match.home_name)}</span>
+          <span className="text-xl sm:text-2xl">{match.home_flag}</span>
         </div>
-        <div className="min-w-[72px] text-center">
+        <div className="min-w-[64px] shrink-0 text-center sm:min-w-[72px]">
           {finished || live ? (
             <span className={`text-2xl font-black tabular-nums ${live ? 'text-red-400' : ''}`}>
               {match.home_score}–{match.away_score}
@@ -104,9 +104,9 @@ export default function MatchCard({ match, onSaved, onOpenDetail }) {
             </span>
           )}
         </div>
-        <div className="flex flex-1 items-center gap-2">
-          <span className="text-2xl">{match.away_flag}</span>
-          <span className="truncate font-semibold">{tn(match.away_code, match.away_name)}</span>
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <span className="text-xl sm:text-2xl">{match.away_flag}</span>
+          <span className="truncate text-sm font-semibold sm:text-base">{tn(match.away_code, match.away_name)}</span>
         </div>
       </button>
 
@@ -156,9 +156,9 @@ export default function MatchCard({ match, onSaved, onOpenDetail }) {
         )}
 
         {locked && (
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
             {p ? (
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-2 whitespace-nowrap">
                 <span className="text-emerald-50/50">{t('match.your')}</span>
                 <span className="font-bold">{p.home_goals}–{p.away_goals}</span>
                 {p.is_joker === 1 && <span className="chip bg-purple-500/20 text-purple-300">🃏</span>}
@@ -168,7 +168,7 @@ export default function MatchCard({ match, onSaved, onOpenDetail }) {
               <span className="text-emerald-50/40">{t('match.none')}</span>
             )}
             {match.community && match.community.total > 0 && (
-              <span className="text-xs text-emerald-50/40">
+              <span className="whitespace-nowrap text-xs text-emerald-50/40">
                 {match.community.home_wins}·{match.community.draws}·{match.community.away_wins} {t('match.of', { n: match.community.total })}
               </span>
             )}

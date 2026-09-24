@@ -388,7 +388,9 @@ function stampCommentary(matchId, details) {
     before = new Map(old.filter((c) => c.seen).map((c) => [`${c.seq}|${c.text}`, c.seen]));
   } catch { /* unreadable old row: stamp everything fresh */ }
   const now = Date.now();
-  for (const c of details.commentary) c.seen = before.get(`${c.seq}|${c.text}`) ?? now;
+  // a provider may bring its own timestamp (the demo simulator knows when a
+  // line "happened" in its time-compressed season); an earlier stamp wins
+  for (const c of details.commentary) c.seen = before.get(`${c.seq}|${c.text}`) ?? c.seen ?? now;
 }
 
 export function getDetails(matchId) {

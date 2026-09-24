@@ -36,3 +36,27 @@ test('TV mode renders fullscreen dashboard', async ({ page }) => {
   await expect(page.locator('body')).toContainText(/Nations League|Stand|live|📅/i);
   check();
 });
+
+test('TV mode is offered on big screens only', async ({ page }, info) => {
+  await uiLogin(page);
+  await page.goto('/#/meer');
+  await expect(page.getByRole('heading', { level: 1, name: 'Meer' })).toBeVisible();
+  const tv = page.getByTestId('more-tv');
+  if (info.project.name === 'mobile') await expect(tv).toBeHidden();
+  else await expect(tv).toBeVisible();
+});
+
+test.describe('iPhone width (390px)', () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  test('no page scrolls sideways', async ({ page }) => {
+    await uiLogin(page);
+    for (const [route] of PAGES) {
+      await page.goto(`/#${route}`);
+      await dismissPopups(page);
+      await page.waitForTimeout(500);
+      const { sw, vw } = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, vw: window.innerWidth }));
+      expect(sw, `${route} is ${sw}px wide on a ${vw}px screen`).toBeLessThanOrEqual(vw);
+    }
+  });
+});

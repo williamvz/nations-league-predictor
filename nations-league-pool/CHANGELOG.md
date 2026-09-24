@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.1
+
+- De knop **TV-modus** (onder Meer) verschijnt alleen nog op grotere schermen (tablet, laptop, tv). Het adres `/#/tv` blijft gewoon werken, bijvoorbeeld voor een Home Assistant-dashboard.
+- Fix: op smalle telefoons (zoals een iPhone, 390px) kon de wedstrijdenlijst net iets te breed worden bij lange landnamen, waardoor de pagina zijwaarts verschoof en het wedstrijdvenster half buiten beeld viel. Lange namen worden nu netjes ingekort.
+- Demo-modus: het gecombineerde live-verslag in TV-modus staat nu ook bij het gesimuleerde seizoen in de juiste volgorde.
+- 📸 Screenshots in de README, automatisch gegenereerd uit demo-modus.
+
 ## 1.9.0
 
 - 🏷️ **Badges in het live-verslag**: elke belangrijke regel krijgt een label met icoon: ⚽ Goal, 🟨 Kaart, 🟥 Rood, ⇄ Wissel, 🧤 Redding, 🎯 Kans, 🥅 Paal/lat, ⛳ Corner, 🚩 Buitenspel, 📺 VAR, ⚠️ Strafschop, 🩹 Blessure. Aftrap, rust, einde en blessuretijd staan als grote, vette regel in het verslag, zodat je het verloop in één oogopslag ziet. Goals en rode kaarten zijn daarnaast gekleurd gemarkeerd.
