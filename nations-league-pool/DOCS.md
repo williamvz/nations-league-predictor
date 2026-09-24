@@ -74,12 +74,13 @@ De add-on haalt zelf alles op — er is geen configuratie nodig:
 
 | Wanneer | Wat |
 |---|---|
-| Elke 2 min (alleen rond wedstrijden) | Live scores + tussenstanden |
+| Elke 2 min (alleen rond wedstrijden) | Live scores + tussenstanden, statistieken, tijdlijn en live-verslag |
+| Elke 20 min | Opstellingen (±1 uur voor de aftrap) en het wedstrijdverslag (tot 8 uur na afloop) |
 | Elke 20 min | Vangnet-sweep: gemiste uitslagen |
 | Dagelijks 05:30 | Speelschema (aftraptijden, uitstellingen) |
 | Bij het opstarten | Inhaalslag (voor als de Pi uit stond) |
 
-Bronnen: ESPN (primair, incl. doelpuntenmakers) met TheSportsDB als reserve. Zodra een wedstrijd afgelopen is worden de punten berekend, de ranglijst bijgewerkt en krijgt iedereen een melding. Groepswinnaar- en topscorer-bonusvragen keren zichzelf automatisch uit.
+Bronnen: ESPN (primair, incl. doelpuntenmakers, statistieken, opstellingen, live-verslag en wedstrijdverslag) met TheSportsDB als reserve voor de uitslagen. Zodra een wedstrijd afgelopen is worden de punten berekend, de ranglijst bijgewerkt en krijgt iedereen een melding. Groepswinnaar- en topscorer-bonusvragen keren zichzelf automatisch uit.
 
 Gaat er toch iets mis? In **Beheer → Status** zie je de synclog en kun je handmatig synchroniseren; onder **Uitslagen** kun je altijd handmatig een uitslag invoeren (die wordt nooit door de sync overschreven).
 

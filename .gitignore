@@ -5,3 +5,5 @@ node_modules/
 data/
 nations-league-pool/backend/public/
 dist/
+nations-league-pool/e2e/test-results/
+nations-league-pool/e2e/playwright-report/

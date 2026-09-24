@@ -102,11 +102,26 @@ nations-league-pool/       # the add-on (= the whole app)
 │  ├─ src/routes/          # REST API (auth, predictions, leaderboard, …)
 │  ├─ src/services/        # scoring, standings, achievements, bonus, notify
 │  ├─ src/sync/            # providers (ESPN, TheSportsDB), matcher, scheduler
-│  └─ test/                # node:test suite (scoring, standings, e2e flow)
-└─ frontend/               # React 18 + Vite + Tailwind PWA (Dutch)
+│  └─ test/                # node:test suite (unit, sync, full HTTP API)
+├─ frontend/               # React 18 + Vite + Tailwind PWA (6 languages)
+└─ e2e/                    # Playwright browser tests (demo-mode season)
 ```
 
-Dev: `cd nations-league-pool/backend && npm i && JWT_SECRET=dev npm run dev`, then `cd ../frontend && npm i && npm run dev` (Vite proxies `/api`). Tests: `npm test` in `backend/`.
+Dev: `cd nations-league-pool/backend && npm i && JWT_SECRET=dev npm run dev`, then `cd ../frontend && npm i && npm run dev` (Vite proxies `/api`).
+
+### 🧪 Testing
+
+```bash
+cd nations-league-pool
+./test.sh            # everything: backend suite + frontend build + browser tests
+./test.sh backend    # node:test only (~10 s): scoring, sync, ESPN parser, full HTTP API
+./test.sh e2e        # Playwright only: builds the frontend, boots the app in demo mode, clicks through it
+```
+
+- `backend/test/api.test.js` walks the whole REST API over HTTP (register → approve → predict → result → leaderboard → admin).
+- `backend/test/espn-summary.test.js` pins the ESPN match-detail parser against `test/fixtures/espn-summary.json`.
+- `e2e/tests/*.spec.js` run in desktop and mobile Chrome. Failures leave a screenshot and trace in `e2e/test-results/` (`npx playwright show-trace …`).
+- No Playwright browser downloaded? Point it at any Chromium: `PLAYWRIGHT_CHROMIUM=/usr/bin/chromium ./test.sh e2e`.
 
 ---
 

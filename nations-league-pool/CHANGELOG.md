@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.7.0
+
+- 📊 **Wedstrijdcentrum**: tik op een wedstrijd voor veel meer dan de score, live bijgewerkt (elke 30 seconden terwijl je kijkt):
+  - **Overzicht**: tijdlijn met doelpunten (+ assist), kaarten, wissels en VAR-momenten; stadion, scheidsrechter, toeschouwers en de onderlinge resultaten.
+  - **Statistieken**: balbezit, schoten (op doel), hoekschoppen, overtredingen, kaarten, buitenspel, reddingen, passes en meer.
+  - **Opstellingen**: basiself met formatie, rugnummers en de bank; ingevallen en gewisselde spelers zijn gemarkeerd.
+  - **Live-verslag**: minuut-voor-minuut tekstverslag (van ESPN, in het Engels).
+  - **Verslag**: het geschreven wedstrijdverslag, zodra dat na het laatste fluitsignaal verschijnt.
+  - **Voorspellingen**: de consensus-heatmap en ieders voorspelling, zoals je gewend was.
+  Tabbladen verschijnen alleen als er iets te tonen is — voor kleinere duels levert ESPN niet altijd een live-verslag of artikel. Alles werkt ook in demo-modus.
+- Fix: `/api/meta` en `/api/health` gaven altijd "niet ingelogd" terug. Daardoor zag de loginpagina nooit of er een uitnodigingscode was (het veld ontbrak) en verscheen de demo-banner niet.
+- 🧪 Testsuite uitgebreid: de hele API wordt nu over HTTP getest en er is een browsertest (Playwright) die de app in demo-modus opstart en doorklikt. Zie "Testen" in de README.
+
 ## 1.6.2
 
 - Fix: als je de app op je iPhone-beginscherm hebt gezet, liep de bovenbalk onder de iOS-statusbalk door — de klok stond dwars door "Nations League Pool" heen en de 🔔 en je avatar verdwenen achter het wifi- en batterijpictogram. De app houdt nu afstand van de notch/Dynamic Island (en van de home-indicator onderaan). De speelronde-koppen op Wedstrijden blijven daarbij netjes onder de bovenbalk plakken.
