@@ -1,7 +1,9 @@
 // Rich match information from the provider: timeline, statistics, line-ups,
 // live commentary and the post-match recap. Every section is optional —
 // smaller matches often lack commentary or a written report.
+import { useMemo, useState } from 'react';
 import { fmtFull } from '../utils/format';
+import { commentaryToDutch } from '../utils/commentaryNl';
 
 const EVENT_ICON = {
   goal: '⚽', penalty_goal: '⚽', own_goal: '⚽', penalty_missed: '❌',
@@ -200,16 +202,31 @@ const HIGHLIGHT = {
   red_card: 'border-l-red-500 bg-red-500/10', yellow_card: 'border-l-yellow-400', var: 'border-l-sky-400',
 };
 
-export function Commentary({ t, details, live }) {
+export function Commentary({ t, details, live, lang }) {
   const items = details?.commentary || [];
+  // ESPN writes the commentary in English; Dutch readers get a rule-based
+  // translation with the original one tap away
+  const canTranslate = lang === 'nl' && details?.provider !== 'sim';
+  const [original, setOriginal] = useState(false);
+  const shown = useMemo(
+    () => items.map((c) => ({ ...c, nl: canTranslate ? commentaryToDutch(c.text).text : c.text })),
+    [items, canTranslate],
+  );
   if (!items.length) return <p className="text-sm text-emerald-50/40">{t('detail.noCommentary')}</p>;
   return (
     <div className="space-y-1" data-testid="commentary">
-      {live && <p className="mb-2 text-xs text-emerald-50/40">{t('detail.liveRefresh')}</p>}
-      {items.map((c) => (
+      <div className="mb-2 flex items-center justify-between gap-2 text-xs text-emerald-50/40">
+        <span>{live ? t('detail.liveRefresh') : ''}</span>
+        {canTranslate && (
+          <button className="chip shrink-0 bg-white/5 text-emerald-50/60 hover:bg-white/10" onClick={() => setOriginal((o) => !o)} data-testid="commentary-toggle">
+            {original ? '🇳🇱 Vertaald' : '🇬🇧 Origineel'}
+          </button>
+        )}
+      </div>
+      {shown.map((c) => (
         <div key={c.seq} className={`flex gap-3 rounded-lg border-l-2 border-l-white/10 px-2 py-1.5 text-sm ${HIGHLIGHT[c.kind] || ''}`}>
           <span className="w-9 shrink-0 text-xs font-semibold tabular-nums text-emerald-50/50">{c.minute || ''}</span>
-          <span className="flex-1">{c.text}</span>
+          <span className="flex-1">{original ? c.text : c.nl}</span>
         </div>
       ))}
     </div>
