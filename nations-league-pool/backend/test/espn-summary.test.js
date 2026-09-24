@@ -91,7 +91,7 @@ test('robust against empty and partial payloads', () => {
 });
 
 test('news article fallback when there is no top-level article', () => {
-  const r = parseSummary({ news: { articles: [{ type: 'Recap', headline: 'Recap!', story: 'One.<br>Two.' }] } });
+  const r = parseSummary({ header: { id: '42' }, news: { articles: [{ type: 'Recap', headline: 'Recap!', story: 'One.<br>Two.', categories: [{ type: 'event', eventId: 42 }] }] } });
   assert.deepEqual(r.article.paragraphs, ['One.', 'Two.']);
 });
 
@@ -114,4 +114,36 @@ test('htmlToParagraphs', () => {
   assert.deepEqual(htmlToParagraphs('<p>A &amp; B</p><p>&eacute;&ccedil;&#8364;&#x41;</p>'), ['A & B', 'éç€A']);
   assert.deepEqual(htmlToParagraphs('<style>p{}</style><p>x y</p>'), ['x y']);
   assert.deepEqual(htmlToParagraphs(''), []);
+});
+
+test('regression: a league-news recap about ANOTHER match is not used', () => {
+  const other = {
+    type: 'Recap', headline: 'Portugal edge Wales on frustrating night for Ronaldo',
+    description: 'Portugal edged Wales 1-0 in Lisbon to make a winning start to their UEFA Nations League campaign.',
+    links: { web: { href: 'https://www.espn.com/soccer/report/_/gameId/700999' } },
+  };
+  const payload = { ...fixture, article: undefined, news: { articles: [other] } };
+  assert.equal(parseSummary(payload).article, null);
+});
+
+test('a league-news recap linked to this event id is used', () => {
+  const own = { type: 'Recap', headline: 'Late show in Amsterdam', description: 'Oranje rescue a point.',
+    links: { web: { href: 'https://www.espn.com/soccer/report/_/gameId/700123' } } };
+  const other = { type: 'Recap', headline: 'Portugal edge Wales', description: 'x', links: { web: { href: 'https://www.espn.com/soccer/report/_/gameId/700999' } } };
+  const r = parseSummary({ ...fixture, article: undefined, news: { articles: [other, own] } });
+  assert.equal(r.article.headline, 'Late show in Amsterdam');
+  assert.equal(r.article.source, 'news');
+});
+
+test('news recap without link but naming both teams is used; one team is not enough', async () => {
+  const { articleIsAboutEvent } = await import('../src/sync/providers/espn.js');
+  const teams = ['Netherlands', 'Germany'];
+  assert.equal(articleIsAboutEvent({ headline: 'Netherlands and Germany share the spoils' }, '700123', teams), true);
+  assert.equal(articleIsAboutEvent({ headline: 'Germany beat Hungary' }, '700123', teams), false);
+  assert.equal(articleIsAboutEvent({ headline: 'x', categories: [{ type: 'event', eventId: 700123 }] }, '700123', teams), true);
+  assert.equal(articleIsAboutEvent({ headline: 'x', links: { web: { href: '/gameId/7001234' } } }, '700123', teams), false, 'no prefix match');
+});
+
+test('the game\'s own top-level article is marked as such', () => {
+  assert.equal(d.article.source, 'game');
 });

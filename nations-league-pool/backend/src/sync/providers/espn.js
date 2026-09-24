@@ -268,6 +268,28 @@ export function htmlToParagraphs(html) {
     .filter((p) => p.length > 1);
 }
 
+/**
+ * Does a news article belong to this event? Yes when ESPN links it to the
+ * event id (categories or the /gameId/ URL), or when both teams are named.
+ */
+export function articleIsAboutEvent(a, eventId, teamNames = []) {
+  if (!a) return false;
+  const id = String(eventId || '');
+  if (id) {
+    for (const c of a.categories || []) {
+      const cid = c.eventId ?? c.event?.id ?? (c.type === 'event' ? c.id : null);
+      if (cid != null && String(cid) === id) return true;
+    }
+    const hrefs = [a.links?.web?.href, a.links?.api?.self?.href, a.links?.mobile?.href].filter(Boolean).join(' ');
+    if (new RegExp(`(gameId[/=]|event[/=])${id}\\b`).test(hrefs)) return true;
+  }
+  if (teamNames.length === 2) {
+    const text = `${a.headline || ''} ${a.description || ''} ${a.story || ''}`.toLowerCase();
+    return teamNames.every((n) => text.includes(String(n).toLowerCase()));
+  }
+  return false;
+}
+
 /** Classify an ESPN key event / play into our own small vocabulary. */
 export function classifyEvent(typeText = '', text = '', scoringPlay = false) {
   const s = `${typeText} ${text}`.toLowerCase();
@@ -401,8 +423,16 @@ export function parseSummary(data) {
   };
 
   // --- written recap -------------------------------------------------------
+  // The top-level `article` is this game's own recap. `news.articles` is
+  // league news: a recap in there may well be about ANOTHER match of the
+  // same matchday (Portugal–Wales showed up under Netherlands–Germany), so
+  // only accept one that is provably about this event.
   let article = null;
-  const art = data?.article || data?.news?.articles?.find((a) => /recap|report/i.test(a.type || a.headline || ''));
+  const eventId = String(data?.header?.id ?? comp.id ?? '');
+  const teamNames = [homeC, awayC].map((c) => c?.team?.displayName || c?.team?.name || c?.team?.shortDisplayName).filter(Boolean);
+  const art = data?.article
+    || (data?.news?.articles || []).find((a) => /recap|report/i.test(`${a.type || ''} ${a.headline || ''}`)
+      && articleIsAboutEvent(a, eventId, teamNames));
   if (art && (art.story || art.description)) {
     const paragraphs = htmlToParagraphs(art.story || art.description);
     if (paragraphs.length) {
@@ -411,6 +441,7 @@ export function parseSummary(data) {
         description: clean(art.description),
         paragraphs,
         url: clean(art.links?.web?.href),
+        source: art === data?.article ? 'game' : 'news',
         published: clean(art.published || art.lastModified),
       };
     }

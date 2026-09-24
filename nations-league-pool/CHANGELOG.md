@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.1
+
+- Fix: onder **Verslag** kon het wedstrijdverslag van een ándere wedstrijd staan (bij Nederland–Duitsland verscheen "Portugal edge Wales…"). Had ESPN geen eigen verslag, dan pakte de app het eerste verslag uit ESPN's algemene nieuwslijst. Zo'n verslag wordt nu alleen nog getoond als het aantoonbaar over deze wedstrijd gaat. Bij de update worden de eerder opgeslagen verslagen eenmalig opnieuw opgehaald, zodat de foute verdwijnen.
+
 ## 1.8.0
 
 - 🇳🇱 **Live-verslag in het Nederlands**: het minuut-voor-minuut verslag van ESPN is Engelstalig, maar wordt nu automatisch naar het Nederlands vertaald als je de app in het Nederlands gebruikt. Landnamen gaan mee ("(Netherlands)" → "(Nederland)"). Met de knop **🇬🇧 Origineel** zie je de Engelse tekst. De vertaling werkt met vaste regels voor ESPN's standaardzinnen, zonder externe dienst of kosten; een zin die hij (nog) niet kent blijft Engels.
