@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.2
+
+- Fix: ESPN weigerde de opvraag voor meerdere dagen tegelijk (fout 400). Daardoor viel de app terug op de reservebron, zonder minuut, doelpuntenmakers of wedstrijdcentrum. De app vraagt ESPN nu per wedstrijddag op zodra een reeks wordt geweigerd, en onthoudt dat voor de volgende keren.
+
 ## 1.7.1
 
 - Fix: een live wedstrijd kon een leeg wedstrijdscherm tonen — geen minuut, geen doelpuntenmakers, geen statistieken.

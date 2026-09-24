@@ -7,8 +7,46 @@ const HEADERS = { 'User-Agent': 'Mozilla/5.0 (compatible; NationsLeaguePool/1.0)
 
 async function get(url) {
   const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(15000) });
-  if (!res.ok) throw new Error(`ESPN ${res.status} for ${url}`);
+  if (!res.ok) throw Object.assign(new Error(`ESPN ${res.status} for ${url}`), { status: res.status });
   return res.json();
+}
+
+// ESPN rejects some date ranges (400 for "20260924-20260925" in production).
+// Once that happens we stop trying ranges and ask day by day.
+let rangesRejected = false;
+export function _resetRangeSupport() { rangesRejected = false; }
+
+/**
+ * Events for a list of days (YYYYMMDD). One request for a single day; a
+ * range request for several, falling back to one request per day when
+ * ESPN refuses the range. Days that fail individually are skipped as long
+ * as at least one succeeds.
+ */
+export async function fetchEventsForDays(days, fetchOne = fetchEvents) {
+  const list = [...new Set(days)].sort();
+  if (!list.length) return [];
+  if (list.length === 1) return fetchOne(list[0]);
+  if (!rangesRejected) {
+    try {
+      return await fetchOne(`${list[0]}-${list[list.length - 1]}`);
+    } catch (err) {
+      if (err.status !== 400) throw err;
+      rangesRejected = true;
+    }
+  }
+  const seen = new Map();
+  let lastErr = null;
+  let ok = 0;
+  for (const day of list) {
+    try {
+      for (const ev of await fetchOne(day)) seen.set(String(ev.providerId), ev);
+      ok += 1;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  if (!ok && lastErr) throw lastErr;
+  return [...seen.values()];
 }
 
 const STATUS_MAP = { pre: 'scheduled', in: 'live', post: 'finished' };

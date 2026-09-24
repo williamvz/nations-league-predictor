@@ -1,5 +1,5 @@
 import db, { getSetting } from '../db/database.js';
-import { fetchEvents as espnFetch, fetchSummary as espnSummary, mergeDetails, isEmptyDetails } from './providers/espn.js';
+import { fetchEventsForDays as espnFetchDays, fetchSummary as espnSummary, mergeDetails, isEmptyDetails } from './providers/espn.js';
 import { fetchSeason as tsdbFetch } from './providers/sportsdb.js';
 import { findTeam, findMatch, rememberProviderId } from './matcher.js';
 import { processMatchResult } from '../services/scoring.js';
@@ -268,12 +268,11 @@ export async function syncScores() {
     return { skipped: true, reason: 'geen wedstrijden in venster' };
   }
 
-  const range = dates.length === 1 ? dates[0] : `${dates[0]}-${dates[dates.length - 1]}`;
   let matched = 0;
   try {
-    const events = await espnFetch(range);
+    const events = await espnFetchDays(dates);
     for (const ev of events) if (applyEvent(ev, 'espn').matched) matched += 1;
-    log('scores', 'espn', true, `${events.length} events, ${matched} gematcht (${range})`);
+    log('scores', 'espn', true, `${events.length} events, ${matched} gematcht (${dates.join(', ')})`);
     classifyFinals();
     resolveBonusQuestions();
     await syncMatchDetails({ baseline: baselineFrom(events) });
@@ -318,9 +317,9 @@ export async function syncFixtures() {
   // ESPN pass over the full tournament window: confirms kickoffs and catches
   // up on any results we missed while the Pi was off.
   try {
-    const range = tournamentDateRange();
-    if (range) {
-      const events = await espnFetch(range);
+    const days = tournamentDays();
+    if (days.length) {
+      const events = await espnFetchDays(days);
       let matched = 0;
       for (const ev of events) if (applyEvent(ev, 'espn', { updateKickoff: true }).matched) matched += 1;
       log('fixtures', 'espn', true, `${events.length} events, ${matched} gematcht`);
@@ -336,14 +335,14 @@ export async function syncFixtures() {
   return { ok };
 }
 
-function tournamentDateRange() {
-  const row = db.prepare(`
-    SELECT MIN(date(kickoff_utc)) AS lo, MAX(date(kickoff_utc)) AS hi FROM matches
+/** Match days (YYYYMMDD) in the catch-up window: anything unfinished up to a week ahead. */
+function tournamentDays() {
+  return db.prepare(`
+    SELECT DISTINCT date(kickoff_utc) AS d FROM matches
     WHERE datetime(kickoff_utc) <= datetime('now', '+7 days')
       AND (status != 'finished' OR points_calculated = 0)
-  `).get();
-  if (!row?.lo) return null;
-  return `${row.lo.replaceAll('-', '')}-${row.hi.replaceAll('-', '')}`;
+    ORDER BY d
+  `).all().map((r) => r.d.replaceAll('-', ''));
 }
 
 /** True when a match is live or kicks off within 30 minutes. */
