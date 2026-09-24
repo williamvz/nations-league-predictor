@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.1
+
+- Fix: een live wedstrijd kon een leeg wedstrijdscherm tonen — geen minuut, geen doelpuntenmakers, geen statistieken.
+  - Het wedstrijdcentrum gebruikt nu óók de gegevens van het ESPN-scorebord (balbezit, schoten, hoekschoppen, doelpunten, kaarten, stadion) en vult die aan met het uitgebreide ESPN-wedstrijdoverzicht. Lukt dat overzicht niet, dan zie je toch de basis.
+  - Doelpuntenmakers verschijnen nu al tijdens de wedstrijd (niet pas na afloop), en een door de VAR afgekeurde goal verdwijnt weer.
+  - De reservebron (TheSportsDB) wist de wedstrijdminuut niet meer, en levert zelf een minuut als die beschikbaar is.
+  - De minuut wordt robuuster uitgelezen (inclusief "HT" in de rust).
+- 🔧 Beheerders zien onderaan het wedstrijdscherm een **diagnose**: waar de score vandaan komt, of er een ESPN-koppeling is, wanneer de details voor het laatst zijn opgehaald en de laatste syncfout.
+
 ## 1.7.0
 
 - 📊 **Wedstrijdcentrum**: tik op een wedstrijd voor veel meer dan de score, live bijgewerkt (elke 30 seconden terwijl je kijkt):

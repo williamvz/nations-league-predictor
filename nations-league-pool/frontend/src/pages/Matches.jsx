@@ -5,6 +5,7 @@ import { Spinner, Modal, LiveDot } from '../components/ui';
 import MatchCard from '../components/MatchCard';
 import { groupBy, fmtFull, fmtPoints } from '../utils/format';
 import { useT, roundLabelT, matchContextT } from '../i18n';
+import { useAuth } from '../context/AuthContext';
 import { detailTabs, TabBar, Timeline, MatchInfo, HeadToHead, Stats, Lineups, Commentary, Report } from '../components/MatchDetails';
 
 const FILTERS = [
@@ -164,6 +165,7 @@ function ConsensusHeatmap({ t, predictions, homeName, awayName, actual }) {
 
 function MatchDetail({ id, onClose }) {
   const { t, tn } = useT();
+  const { user } = useAuth();
   const [detail, setDetail] = useState(null);
   const [tab, setTab] = useState('overview');
 
@@ -247,6 +249,10 @@ function MatchDetail({ id, onClose }) {
               <MatchInfo t={t} details={d} m={m} />
               <HeadToHead t={t} details={d} m={m} tn={tnm} />
               {!d && m.status === 'scheduled' && <p className="text-center text-sm text-emerald-50/40">{t('detail.soon')}</p>}
+              {m.status === 'live' && !d?.timeline?.length && !m.goals?.length && !d?.stats?.length && (
+                <p className="text-center text-sm text-emerald-50/40" data-testid="live-waiting">{t('detail.liveWaiting')}</p>
+              )}
+              {user?.is_admin === 1 && m.diagnostics && <Diagnostics t={t} dx={m.diagnostics} />}
             </>
           )}
           {active === 'stats' && <Stats t={t} details={d} m={m} />}
@@ -299,5 +305,26 @@ function MiniStats({ t, d, onMore }) {
         </div>
       ))}
     </button>
+  );
+}
+
+/** Admin-only: where this match's data comes from and why it may be empty. */
+function Diagnostics({ t, dx }) {
+  const ago = (iso) => {
+    if (!iso) return '—';
+    const ms = Date.now() - new Date(iso.includes('T') ? iso : `${iso.replace(' ', 'T')}Z`).getTime();
+    return ms < 90_000 ? `${Math.max(0, Math.round(ms / 1000))}s` : `${Math.round(ms / 60000)}m`;
+  };
+  const summary = dx.details_sync?.summary;
+  return (
+    <details className="rounded-xl border border-white/5 bg-black/20 p-2 text-[11px] text-emerald-50/50" data-testid="diagnostics">
+      <summary className="cursor-pointer select-none">🔧 {t('detail.diag')}</summary>
+      <div className="mt-1 space-y-0.5 font-mono">
+        <div>{t('detail.diagSource')}: {dx.result_source || '—'} · ids: {Object.keys(dx.providers || {}).join(', ') || '—'}</div>
+        {!dx.providers?.espn && <div className="text-oranje-300">{t('detail.diagNoEspn')}</div>}
+        <div>{t('detail.diagDetails')}: {summary || t('detail.diagNever')}{dx.details_sync ? ` · scoreboard ${dx.details_sync.scoreboard ? '✓' : '✗'}` : ''} · {ago(dx.details_updated_at)}</div>
+        {dx.last_sync_error && <div className="text-red-300/80">{dx.last_sync_error.ts}: {dx.last_sync_error.message}</div>}
+      </div>
+    </details>
   );
 }
