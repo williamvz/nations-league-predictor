@@ -215,6 +215,19 @@ if (!matchCols.includes('winner_team_id')) {
   db.exec('ALTER TABLE matches ADD COLUMN winner_team_id INTEGER REFERENCES teams(id)');
 }
 
+// 1.8.1: before this version a recap from ESPN's league news could belong
+// to a different match. Drop stored articles once and let the next sync
+// (the boot catch-up) refetch them with the stricter check.
+if (!db.prepare("SELECT 1 FROM settings WHERE key = 'migr_recheck_articles_v1'").get()) {
+  db.transaction(() => {
+    db.prepare(`
+      UPDATE match_details SET complete = 0, data = json_set(data, '$.article', json('null'))
+      WHERE provider = 'espn' AND json_extract(data, '$.article') IS NOT NULL
+    `).run();
+    db.prepare("INSERT INTO settings (key, value) VALUES ('migr_recheck_articles_v1', '1')").run();
+  })();
+}
+
 export function getSetting(key, fallback = null) {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
   return row ? row.value : fallback;
