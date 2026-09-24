@@ -45,6 +45,8 @@ Set `demo_mode: true` in the add-on config (or `DEMO_MODE=1` standalone) and res
 
 Demo mode also fills the match centre: every simulated match gets statistics, a timeline with cards and subs, line-ups, running commentary and a written (Dutch) report, all shaped exactly like the ESPN data.
 
+ESPN's live commentary is English, machine-written from a fixed set of Opta sentence templates. For Dutch users `frontend/src/utils/commentaryNl.js` translates it with ordered pattern rules (team names included), so no external translation service is involved. Unknown sentences stay English, and a toggle shows the original.
+
 The same simulation also runs headless in the test suite: `test/season.test.js` plays the full tournament through the sync engine and asserts points, standings, snapshots, scorers, bonus payouts, achievements and leaderboard consistency.
 
 ## 🐳 Standalone (without Home Assistant)
@@ -119,11 +121,12 @@ Dev: `cd nations-league-pool/backend && npm i && JWT_SECRET=dev npm run dev`, th
 ```bash
 cd nations-league-pool
 ./test.sh            # everything: backend suite + frontend build + browser tests
-./test.sh backend    # node:test only (~10 s): scoring, sync, ESPN parser, full HTTP API
+./test.sh backend    # node:test only (~10 s): scoring, sync, ESPN parser, full HTTP API + frontend unit tests
 ./test.sh e2e        # Playwright only: builds the frontend, boots the app in demo mode, clicks through it
 ```
 
 - `backend/test/api.test.js` walks the whole REST API over HTTP (register → approve → predict → result → leaderboard → admin).
+- `frontend/src/utils/commentaryNl.test.js` pins the Dutch commentary translation against real ESPN lines.
 - `backend/test/espn-summary.test.js` pins the ESPN match-detail parser against `test/fixtures/espn-summary.json`.
 - `e2e/tests/*.spec.js` run in desktop and mobile Chrome. Failures leave a screenshot and trace in `e2e/test-results/` (`npx playwright show-trace …`).
 - No Playwright browser downloaded? Point it at any Chromium: `PLAYWRIGHT_CHROMIUM=/usr/bin/chromium ./test.sh e2e`.

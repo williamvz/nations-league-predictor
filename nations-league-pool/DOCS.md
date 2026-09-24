@@ -29,11 +29,12 @@ Tik op een wedstrijd voor alles wat er te weten valt. Terwijl je kijkt ververst 
 | **Overzicht** | Tijdlijn met doelpunten (en assist), kaarten, wissels en VAR-momenten; balbezit en schoten in één oogopslag; stadion, scheidsrechter, toeschouwers en eerdere onderlinge duels |
 | **Statistieken** | Balbezit, schoten (op doel), hoekschoppen, overtredingen, kaarten, buitenspel, reddingen, passes en passnauwkeurigheid, voorzetten, tackles en onderscheppingen |
 | **Opstellingen** | Formatie, basiself met rugnummers, de bank; ▲ ingevallen / ▼ gewisseld |
-| **Live-verslag** | Minuut-voor-minuut tekstverslag (van ESPN, in het Engels), nieuwste bovenaan |
+| **Live-verslag** | Minuut-voor-minuut tekstverslag van ESPN, nieuwste bovenaan. In het Nederlands vertaald als je de app in het Nederlands gebruikt; **🇬🇧 Origineel** toont de Engelse tekst |
 | **Verslag** | Het geschreven wedstrijdverslag, zodra dat na het laatste fluitsignaal verschijnt |
 | **Voorspellingen** | Consensus-heatmap en ieders voorspelling (pas na de aftrap) |
 
 Goed om te weten:
+- De vertaling van het live-verslag werkt met vaste regels voor de standaardzinnen van ESPN (schoten, kansen, overtredingen, kaarten, wissels, hoekschoppen, buitenspel, VAR…). Een zin die hij niet herkent blijft Engels. Het **verslag** (artikel) na afloop blijft Engelstalig.
 - Tabbladen verschijnen alleen als er iets te tonen is. Voor kleinere duels levert ESPN niet altijd een live-verslag of een artikel.
 - **Opstellingen** komen ongeveer een uur voor de aftrap. Het **verslag** zoekt de app tot 8 uur na afloop; komt er niets, dan stopt hij daarmee.
 - Stond de Pi uit? De dagelijkse synchronisatie haalt de gegevens van gemiste wedstrijden alsnog op.

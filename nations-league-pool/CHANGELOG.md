@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.0
+
+- 🇳🇱 **Live-verslag in het Nederlands**: het minuut-voor-minuut verslag van ESPN is Engelstalig, maar wordt nu automatisch naar het Nederlands vertaald als je de app in het Nederlands gebruikt. Landnamen gaan mee ("(Netherlands)" → "(Nederland)"). Met de knop **🇬🇧 Origineel** zie je de Engelse tekst. De vertaling werkt met vaste regels voor ESPN's standaardzinnen, zonder externe dienst of kosten; een zin die hij (nog) niet kent blijft Engels.
+
 ## 1.7.2
 
 - Fix: ESPN weigerde de opvraag voor meerdere dagen tegelijk (fout 400). Daardoor viel de app terug op de reservebron, zonder minuut, doelpuntenmakers of wedstrijdcentrum. De app vraagt ESPN nu per wedstrijddag op zodra een reeks wordt geweigerd, en onthoudt dat voor de volgende keren.

@@ -164,7 +164,7 @@ function ConsensusHeatmap({ t, predictions, homeName, awayName, actual }) {
 }
 
 function MatchDetail({ id, onClose }) {
-  const { t, tn } = useT();
+  const { t, tn, lang } = useT();
   const { user } = useAuth();
   const [detail, setDetail] = useState(null);
   const [tab, setTab] = useState('overview');
@@ -257,7 +257,7 @@ function MatchDetail({ id, onClose }) {
           )}
           {active === 'stats' && <Stats t={t} details={d} m={m} />}
           {active === 'lineups' && <Lineups t={t} details={d} m={m} tn={tnm} />}
-          {active === 'live' && <Commentary t={t} details={d} live={m.status === 'live'} />}
+          {active === 'live' && <Commentary t={t} details={d} live={m.status === 'live'} lang={lang} />}
           {active === 'report' && <Report t={t} details={d} />}
 
           {active === 'pool' && m.all_predictions && m.all_predictions.length > 1 && (
