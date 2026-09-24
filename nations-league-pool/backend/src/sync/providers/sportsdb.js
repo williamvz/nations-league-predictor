@@ -23,6 +23,15 @@ function mapStatus(strStatus, hasScore) {
   return 'scheduled';
 }
 
+/** Live clock when TheSportsDB has one ("34", "45+2", "HT"); ESPN is preferred. */
+function tsdbMinute(ev) {
+  const status = String(ev.strStatus || '').toUpperCase();
+  if (status === 'HT') return 'HT';
+  const p = String(ev.strProgress || '').trim();
+  if (/^\d+(\+\d+)?'?$/.test(p)) return p.endsWith("'") ? p : `${p}'`;
+  return null;
+}
+
 /** Fetch the whole season's events, normalized like the ESPN provider. */
 export async function fetchSeason(season = '2026-2027') {
   const data = await get(`${BASE}/eventsseason.php?id=${LEAGUE_ID}&s=${season}`);
@@ -43,7 +52,7 @@ export async function fetchSeason(season = '2026-2027') {
       homeScore: hasScore ? Number(ev.intHomeScore) : null,
       awayScore: ev.intAwayScore != null && ev.intAwayScore !== '' ? Number(ev.intAwayScore) : null,
       status: mapStatus(ev.strStatus, hasScore),
-      minute: null,
+      minute: tsdbMinute(ev),
       kickoffIso,
       goals: [], // free tier has no reliable per-goal data
     });

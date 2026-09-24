@@ -69,6 +69,24 @@ router.get('/:id', authenticate, (req, res) => {
   `).all(match.id);
   // stats, timeline, line-ups, commentary and recap (when the provider has them)
   out.details = getDetails(match.id);
+  // admins get a peek under the hood: where the data comes from and why
+  // the match screen might be empty
+  if (req.user.is_admin) {
+    const raw = db.prepare('SELECT provider_ids, updated_at FROM matches WHERE id = ?').get(match.id);
+    let providers = {};
+    try { providers = JSON.parse(raw.provider_ids || '{}'); } catch { /* keep empty */ }
+    const lastDetailError = db.prepare(
+      "SELECT ts, message FROM sync_log WHERE job IN ('details', 'scores') AND ok = 0 ORDER BY id DESC LIMIT 1"
+    ).get() || null;
+    out.diagnostics = {
+      result_source: match.result_source,
+      providers,
+      match_updated_at: raw.updated_at,
+      details_sync: out.details?.sync || null,
+      details_updated_at: out.details?.updated_at || null,
+      last_sync_error: lastDetailError,
+    };
+  }
   // everyone's predictions become visible once the match has started
   if (out.is_locked) {
     out.all_predictions = db.prepare(`

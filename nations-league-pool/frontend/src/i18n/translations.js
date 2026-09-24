@@ -180,6 +180,7 @@ export const ACHIEVEMENTS_I18N = {
 // Match details (stats, timeline, line-ups, commentary, recap) — v1.7.0
 const DETAIL_STRINGS = {
   nl: {
+    'detail.liveWaiting': 'Live-gegevens worden opgehaald — dit scherm ververst vanzelf.', 'detail.diag': 'Diagnose (alleen beheerders)', 'detail.diagSource': 'Bron score', 'detail.diagDetails': 'Details', 'detail.diagNever': 'nog nooit opgehaald', 'detail.diagNoEspn': 'Geen ESPN-koppeling voor deze wedstrijd — de score komt van de reservebron, zonder minuut en details.',
     'detail.tab.overview': 'Overzicht', 'detail.tab.stats': 'Statistieken', 'detail.tab.lineups': 'Opstellingen', 'detail.tab.live': 'Live-verslag', 'detail.tab.report': 'Verslag', 'detail.tab.pool': 'Voorspellingen',
     'detail.timeline': 'Wedstrijdverloop', 'detail.assist': 'assist: {name}', 'detail.referee': 'Scheidsrechter', 'detail.attendance': '{n} toeschouwers', 'detail.h2h': 'Onderling', 'detail.bench': 'Bank', 'detail.subbedIn': 'Ingevallen', 'detail.subbedOut': 'Gewisseld',
     'detail.noStats': 'Nog geen statistieken beschikbaar.', 'detail.noLineups': 'De opstellingen worden ongeveer een uur voor de aftrap bekend.', 'detail.noCommentary': 'Geen live-verslag beschikbaar voor deze wedstrijd.', 'detail.noReport': 'Nog geen wedstrijdverslag — dat verschijnt meestal kort na het laatste fluitsignaal.',
@@ -189,6 +190,7 @@ const DETAIL_STRINGS = {
     'stat.possessionPct': 'Balbezit', 'stat.totalShots': 'Schoten', 'stat.shotsOnTarget': 'Op doel', 'stat.wonCorners': 'Hoekschoppen', 'stat.foulsCommitted': 'Overtredingen', 'stat.yellowCards': 'Gele kaarten', 'stat.redCards': 'Rode kaarten', 'stat.offsides': 'Buitenspel', 'stat.saves': 'Reddingen', 'stat.accuratePasses': 'Geslaagde passes', 'stat.totalPasses': 'Passes', 'stat.passPct': 'Passnauwkeurigheid', 'stat.totalCrosses': 'Voorzetten', 'stat.totalTackles': 'Tackles', 'stat.interceptions': 'Onderscheppingen',
   },
   en: {
+    'detail.liveWaiting': 'Fetching live data — this screen refreshes by itself.', 'detail.diag': 'Diagnostics (admins only)', 'detail.diagSource': 'Score source', 'detail.diagDetails': 'Details', 'detail.diagNever': 'never fetched', 'detail.diagNoEspn': 'No ESPN link for this match — the score comes from the fallback source, without minute or details.',
     'detail.tab.overview': 'Overview', 'detail.tab.stats': 'Stats', 'detail.tab.lineups': 'Line-ups', 'detail.tab.live': 'Live', 'detail.tab.report': 'Report', 'detail.tab.pool': 'Predictions',
     'detail.timeline': 'Match timeline', 'detail.assist': 'assist: {name}', 'detail.referee': 'Referee', 'detail.attendance': '{n} spectators', 'detail.h2h': 'Head to head', 'detail.bench': 'Bench', 'detail.subbedIn': 'Came on', 'detail.subbedOut': 'Substituted',
     'detail.noStats': 'No statistics available yet.', 'detail.noLineups': 'Line-ups are announced about an hour before kick-off.', 'detail.noCommentary': 'No live commentary available for this match.', 'detail.noReport': 'No match report yet — it usually appears shortly after the final whistle.',
@@ -198,6 +200,7 @@ const DETAIL_STRINGS = {
     'stat.possessionPct': 'Possession', 'stat.totalShots': 'Shots', 'stat.shotsOnTarget': 'On target', 'stat.wonCorners': 'Corners', 'stat.foulsCommitted': 'Fouls', 'stat.yellowCards': 'Yellow cards', 'stat.redCards': 'Red cards', 'stat.offsides': 'Offsides', 'stat.saves': 'Saves', 'stat.accuratePasses': 'Accurate passes', 'stat.totalPasses': 'Passes', 'stat.passPct': 'Pass accuracy', 'stat.totalCrosses': 'Crosses', 'stat.totalTackles': 'Tackles', 'stat.interceptions': 'Interceptions',
   },
   fr: {
+    'detail.liveWaiting': 'Données en direct en cours de chargement — cet écran s\'actualise tout seul.',
     'detail.tab.overview': 'Résumé', 'detail.tab.stats': 'Statistiques', 'detail.tab.lineups': 'Compositions', 'detail.tab.live': 'Direct', 'detail.tab.report': 'Compte rendu', 'detail.tab.pool': 'Pronostics',
     'detail.timeline': 'Déroulé du match', 'detail.assist': 'passe : {name}', 'detail.referee': 'Arbitre', 'detail.attendance': '{n} spectateurs', 'detail.h2h': 'Confrontations', 'detail.bench': 'Banc', 'detail.subbedIn': 'Entré en jeu', 'detail.subbedOut': 'Remplacé',
     'detail.noStats': 'Pas encore de statistiques.', 'detail.noLineups': 'Les compositions sont annoncées environ une heure avant le coup d\'envoi.', 'detail.noCommentary': 'Pas de commentaire en direct pour ce match.', 'detail.noReport': 'Pas encore de compte rendu — il paraît généralement peu après le coup de sifflet final.',
@@ -207,6 +210,7 @@ const DETAIL_STRINGS = {
     'stat.possessionPct': 'Possession', 'stat.totalShots': 'Tirs', 'stat.shotsOnTarget': 'Cadrés', 'stat.wonCorners': 'Corners', 'stat.foulsCommitted': 'Fautes', 'stat.yellowCards': 'Cartons jaunes', 'stat.redCards': 'Cartons rouges', 'stat.offsides': 'Hors-jeu', 'stat.saves': 'Arrêts', 'stat.accuratePasses': 'Passes réussies', 'stat.totalPasses': 'Passes', 'stat.passPct': 'Précision des passes', 'stat.totalCrosses': 'Centres', 'stat.totalTackles': 'Tacles', 'stat.interceptions': 'Interceptions',
   },
   es: {
+    'detail.liveWaiting': 'Cargando datos en directo — esta pantalla se actualiza sola.',
     'detail.tab.overview': 'Resumen', 'detail.tab.stats': 'Estadísticas', 'detail.tab.lineups': 'Alineaciones', 'detail.tab.live': 'En directo', 'detail.tab.report': 'Crónica', 'detail.tab.pool': 'Pronósticos',
     'detail.timeline': 'Desarrollo del partido', 'detail.assist': 'asistencia: {name}', 'detail.referee': 'Árbitro', 'detail.attendance': '{n} espectadores', 'detail.h2h': 'Cara a cara', 'detail.bench': 'Banquillo', 'detail.subbedIn': 'Entró', 'detail.subbedOut': 'Sustituido',
     'detail.noStats': 'Aún no hay estadísticas.', 'detail.noLineups': 'Las alineaciones se anuncian una hora antes del inicio.', 'detail.noCommentary': 'No hay narración en directo para este partido.', 'detail.noReport': 'Aún no hay crónica — suele aparecer poco después del pitido final.',
@@ -216,6 +220,7 @@ const DETAIL_STRINGS = {
     'stat.possessionPct': 'Posesión', 'stat.totalShots': 'Tiros', 'stat.shotsOnTarget': 'A puerta', 'stat.wonCorners': 'Córners', 'stat.foulsCommitted': 'Faltas', 'stat.yellowCards': 'Amarillas', 'stat.redCards': 'Rojas', 'stat.offsides': 'Fueras de juego', 'stat.saves': 'Paradas', 'stat.accuratePasses': 'Pases completados', 'stat.totalPasses': 'Pases', 'stat.passPct': 'Precisión de pase', 'stat.totalCrosses': 'Centros', 'stat.totalTackles': 'Entradas', 'stat.interceptions': 'Intercepciones',
   },
   de: {
+    'detail.liveWaiting': 'Live-Daten werden geladen — dieser Bildschirm aktualisiert sich selbst.',
     'detail.tab.overview': 'Übersicht', 'detail.tab.stats': 'Statistik', 'detail.tab.lineups': 'Aufstellungen', 'detail.tab.live': 'Liveticker', 'detail.tab.report': 'Spielbericht', 'detail.tab.pool': 'Tipps',
     'detail.timeline': 'Spielverlauf', 'detail.assist': 'Vorlage: {name}', 'detail.referee': 'Schiedsrichter', 'detail.attendance': '{n} Zuschauer', 'detail.h2h': 'Direkter Vergleich', 'detail.bench': 'Bank', 'detail.subbedIn': 'Eingewechselt', 'detail.subbedOut': 'Ausgewechselt',
     'detail.noStats': 'Noch keine Statistiken verfügbar.', 'detail.noLineups': 'Die Aufstellungen werden etwa eine Stunde vor Anpfiff bekannt gegeben.', 'detail.noCommentary': 'Für dieses Spiel gibt es keinen Liveticker.', 'detail.noReport': 'Noch kein Spielbericht — er erscheint meist kurz nach dem Abpfiff.',
@@ -225,6 +230,7 @@ const DETAIL_STRINGS = {
     'stat.possessionPct': 'Ballbesitz', 'stat.totalShots': 'Schüsse', 'stat.shotsOnTarget': 'Aufs Tor', 'stat.wonCorners': 'Ecken', 'stat.foulsCommitted': 'Fouls', 'stat.yellowCards': 'Gelbe Karten', 'stat.redCards': 'Rote Karten', 'stat.offsides': 'Abseits', 'stat.saves': 'Paraden', 'stat.accuratePasses': 'Angekommene Pässe', 'stat.totalPasses': 'Pässe', 'stat.passPct': 'Passquote', 'stat.totalCrosses': 'Flanken', 'stat.totalTackles': 'Tacklings', 'stat.interceptions': 'Abgefangene Bälle',
   },
   it: {
+    'detail.liveWaiting': 'Caricamento dei dati in diretta — questa schermata si aggiorna da sola.',
     'detail.tab.overview': 'Panoramica', 'detail.tab.stats': 'Statistiche', 'detail.tab.lineups': 'Formazioni', 'detail.tab.live': 'Diretta', 'detail.tab.report': 'Cronaca', 'detail.tab.pool': 'Pronostici',
     'detail.timeline': 'Andamento della partita', 'detail.assist': 'assist: {name}', 'detail.referee': 'Arbitro', 'detail.attendance': '{n} spettatori', 'detail.h2h': 'Precedenti', 'detail.bench': 'Panchina', 'detail.subbedIn': 'Entrato', 'detail.subbedOut': 'Sostituito',
     'detail.noStats': 'Nessuna statistica ancora disponibile.', 'detail.noLineups': 'Le formazioni vengono annunciate circa un\'ora prima del calcio d\'inizio.', 'detail.noCommentary': 'Nessuna diretta testuale per questa partita.', 'detail.noReport': 'Nessuna cronaca ancora — di solito arriva poco dopo il fischio finale.',

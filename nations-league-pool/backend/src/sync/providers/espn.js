@@ -13,6 +13,18 @@ async function get(url) {
 
 const STATUS_MAP = { pre: 'scheduled', in: 'live', post: 'finished' };
 
+/** Live clock: displayClock ("34'"), else shortDetail ("34'", "HT"), else period. */
+export function liveMinute(ev, comp) {
+  const st = ev?.status || comp?.status || {};
+  const clock = String(st.displayClock || '').trim();
+  if (clock && clock !== "0'" && clock !== '0:00') return clock;
+  const detail = String(st.type?.shortDetail || st.type?.detail || '').trim();
+  if (/^(ht|halftime|half time)$/i.test(detail)) return 'HT';
+  if (/\d+'/.test(detail)) return detail.match(/\d+'(\+\d+')?/)[0];
+  if (/half/i.test(st.type?.description || '')) return 'HT';
+  return null;
+}
+
 /**
  * Fetch all events for a calendar date (YYYYMMDD, or YYYYMMDD-YYYYMMDD range).
  * Returns normalized events:
@@ -56,9 +68,12 @@ export async function fetchEvents(dates) {
       homeScore: home.score != null ? Number(home.score) : null,
       awayScore: away.score != null ? Number(away.score) : null,
       status,
-      minute: status === 'live' ? (ev.status?.displayClock || null) : null,
+      minute: status === 'live' ? liveMinute(ev, comp) : null,
       kickoffIso: ev.date ? new Date(ev.date).toISOString() : null,
       goals,
+      // baseline match details straight from the scoreboard (stats, goals,
+      // cards, venue); the richer /summary is merged on top when it works
+      details: status === 'scheduled' ? null : parseScoreboardDetails(comp, home, away, status),
     });
   }
   return events;
@@ -79,8 +94,106 @@ export const STAT_KEYS = [
   'passPct', 'totalCrosses', 'totalTackles', 'interceptions',
 ];
 
+const SUMMARY_URLS = [
+  (id) => `${BASE}/summary?event=${id}`,
+  // league-agnostic variant, in case the competition slug is rejected
+  (id) => `https://site.api.espn.com/apis/site/v2/sports/soccer/all/summary?event=${id}`,
+];
+
 export async function fetchSummary(eventId) {
-  return parseSummary(await get(`${BASE}/summary?event=${encodeURIComponent(eventId)}`));
+  const id = encodeURIComponent(eventId);
+  let lastErr;
+  for (const url of SUMMARY_URLS) {
+    try {
+      return parseSummary(await get(url(id)));
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr;
+}
+
+/**
+ * Details from a scoreboard competition: team stats, goals and cards,
+ * venue/attendance. Same normalized shape as parseSummary.
+ */
+export function parseScoreboardDetails(comp, home, away, status = null) {
+  const ids = { home: String(home?.team?.id ?? home?.id ?? ''), away: String(away?.team?.id ?? away?.id ?? '') };
+  const byTeam = { home: {}, away: {} };
+  for (const [side, c] of [['home', home], ['away', away]]) {
+    for (const st of c?.statistics || []) byTeam[side][st.name] = num(st.displayValue ?? st.value);
+  }
+  const stats = [];
+  for (const key of STAT_KEYS) {
+    const h = byTeam.home[key];
+    const a = byTeam.away[key];
+    if (h == null && a == null) continue;
+    stats.push({ key, home: normStat(key, h), away: normStat(key, a) });
+  }
+
+  const timeline = [];
+  for (const d of comp?.details || []) {
+    const typeText = d.type?.text || '';
+    let kind = classifyEvent(typeText, '', d.scoringPlay === true);
+    if (d.ownGoal === true && d.scoringPlay) kind = 'own_goal';
+    else if (d.penaltyKick === true && d.scoringPlay) kind = 'penalty_goal';
+    else if (d.redCard === true) kind = 'red_card';
+    else if (d.yellowCard === true && kind !== 'red_card') kind = 'yellow_card';
+    if (!kind || kind === 'shootout' || kind === 'period') continue;
+    timeline.push({
+      id: `sb-${timeline.length}-${d.clock?.value ?? ''}`,
+      kind,
+      minute: clean(d.clock?.displayValue),
+      side: sideOf(d.team?.id, ids),
+      player: d.athletesInvolved?.[0]?.displayName || null,
+      related: null,
+      text: null,
+    });
+  }
+
+  const venue = comp?.venue || {};
+  return {
+    status,
+    stats,
+    timeline,
+    lineups: {},
+    commentary: [],
+    info: {
+      venue: clean(venue.fullName),
+      city: clean([venue.address?.city, venue.address?.country].filter(Boolean).join(', ')),
+      attendance: num(comp?.attendance) || null,
+      referee: null,
+    },
+    article: null,
+    h2h: [],
+  };
+}
+
+/** Fill the gaps in `primary` (usually /summary) from `fallback` (scoreboard). */
+export function mergeDetails(primary, fallback) {
+  if (!primary) return fallback || null;
+  if (!fallback) return primary;
+  const pick = (a, b) => (Array.isArray(a) && a.length ? a : b || a || []);
+  const info = { ...(fallback.info || {}) };
+  for (const [k, v] of Object.entries(primary.info || {})) if (v != null && v !== '') info[k] = v;
+  return {
+    ...primary,
+    status: primary.status || fallback.status || null,
+    stats: pick(primary.stats, fallback.stats),
+    timeline: pick(primary.timeline, fallback.timeline),
+    commentary: pick(primary.commentary, fallback.commentary),
+    h2h: pick(primary.h2h, fallback.h2h),
+    lineups: Object.keys(primary.lineups || {}).length ? primary.lineups : fallback.lineups || {},
+    info,
+    article: primary.article || fallback.article || null,
+  };
+}
+
+/** True when a parsed payload carries nothing worth showing. */
+export function isEmptyDetails(d) {
+  if (!d) return true;
+  return !d.stats?.length && !d.timeline?.length && !d.commentary?.length && !d.article
+    && !Object.keys(d.lineups || {}).length && !d.h2h?.length && !d.info?.venue && !d.info?.referee;
 }
 
 const num = (v) => {

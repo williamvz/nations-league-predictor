@@ -132,6 +132,11 @@ test('live match exposes details and everyone\'s predictions', async () => {
   assert.equal(d.details.stats[0].home, 60);
   assert.equal(d.details.timeline[0].player, 'Cody Gakpo');
   assert.ok(d.details.updated_at);
+  assert.equal(d.diagnostics, undefined, 'players get no diagnostics');
+
+  const dx = (await call('GET', `/matches/${future}`, { token: admin })).data.match.diagnostics;
+  assert.ok(dx, 'admins do');
+  assert.ok('result_source' in dx && 'providers' in dx && 'details_updated_at' in dx);
 });
 
 test('manual result → points → leaderboard, standings, stats', async () => {

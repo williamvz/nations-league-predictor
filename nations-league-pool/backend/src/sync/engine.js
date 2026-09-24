@@ -1,5 +1,5 @@
 import db, { getSetting } from '../db/database.js';
-import { fetchEvents as espnFetch, fetchSummary as espnSummary } from './providers/espn.js';
+import { fetchEvents as espnFetch, fetchSummary as espnSummary, mergeDetails, isEmptyDetails } from './providers/espn.js';
 import { fetchSeason as tsdbFetch } from './providers/sportsdb.js';
 import { findTeam, findMatch, rememberProviderId } from './matcher.js';
 import { processMatchResult } from '../services/scoring.js';
@@ -176,11 +176,14 @@ export function applyEvent(ev, provider, { updateKickoff = false } = {}) {
         away: away.code,
       }).catch(() => {});
     }
+    // a provider without a live clock (TheSportsDB) must not wipe ESPN's
     db.prepare(`
-      UPDATE matches SET status = 'live', minute = ?, home_score = ?, away_score = ?,
-        result_source = ?, updated_at = datetime('now')
+      UPDATE matches SET status = 'live', minute = COALESCE(?, CASE WHEN status = 'live' THEN minute END),
+        home_score = ?, away_score = ?, result_source = ?, updated_at = datetime('now')
       WHERE id = ?
     `).run(ev.minute, ev.homeScore, ev.awayScore, provider, match.id);
+    // scorers show up in the match screen while the match is still going
+    if (ev.goals?.length) storeGoals(match, ev, home, away);
     changed = true;
   }
 
@@ -221,12 +224,17 @@ function storeGoals(match, ev, home, away) {
     INSERT OR IGNORE INTO match_events (match_id, event_type, player_name, team_id, minute)
     VALUES (?, ?, ?, ?, ?)
   `);
-  for (const g of ev.goals) {
-    const team = findTeam(g.teamName) || (g.teamName === ev.homeName ? home : away);
-    // own goals count for the scoring team's opponent but not for topscorer
-    const type = g.ownGoal ? 'own_goal' : g.penalty ? 'penalty' : 'goal';
-    ins.run(match.id, type, g.player, team ? team.id : null, g.minute);
-  }
+  // the provider's list is the truth: replacing it drops goals that VAR
+  // disallowed and fixes corrected minutes/scorers during a live match
+  db.transaction(() => {
+    db.prepare('DELETE FROM match_events WHERE match_id = ?').run(match.id);
+    for (const g of ev.goals) {
+      const team = findTeam(g.teamName) || (g.teamName === ev.homeName ? home : away);
+      // own goals count for the scoring team's opponent but not for topscorer
+      const type = g.ownGoal ? 'own_goal' : g.penalty ? 'penalty' : 'goal';
+      ins.run(match.id, type, g.player, team ? team.id : null, g.minute);
+    }
+  })();
   recomputeScorers();
 }
 
@@ -268,7 +276,7 @@ export async function syncScores() {
     log('scores', 'espn', true, `${events.length} events, ${matched} gematcht (${range})`);
     classifyFinals();
     resolveBonusQuestions();
-    await syncMatchDetails();
+    await syncMatchDetails({ baseline: baselineFrom(events) });
     return { provider: 'espn', matched };
   } catch (err) {
     log('scores', 'espn', false, err.message);
@@ -296,6 +304,7 @@ export async function syncFixtures() {
   if (!syncEnabled()) return { skipped: true };
   if (DEMO_MODE) return syncSimulated();
   let ok = false;
+  let baseline = new Map();
   try {
     const events = await tsdbFetch();
     let matched = 0;
@@ -315,6 +324,7 @@ export async function syncFixtures() {
       let matched = 0;
       for (const ev of events) if (applyEvent(ev, 'espn', { updateKickoff: true }).matched) matched += 1;
       log('fixtures', 'espn', true, `${events.length} events, ${matched} gematcht`);
+      baseline = baselineFrom(events);
       ok = true;
     }
   } catch (err) {
@@ -322,7 +332,7 @@ export async function syncFixtures() {
   }
   classifyFinals();
   resolveBonusQuestions();
-  await syncMatchDetails({ backfill: true });
+  await syncMatchDetails({ backfill: true, baseline });
   return { ok };
 }
 
@@ -402,21 +412,44 @@ export function matchesNeedingDetails({ backfill = false } = {}) {
   `).all(backfill ? 1 : 0);
 }
 
-export async function syncMatchDetails({ backfill = false, fetcher = espnSummary } = {}) {
+/** ESPN scoreboard events → Map(espnId → baseline details). */
+function baselineFrom(events) {
+  const map = new Map();
+  for (const ev of events) if (ev.details) map.set(String(ev.providerId), ev.details);
+  return map;
+}
+
+/**
+ * Fetch /summary for every match that needs it and merge it over the
+ * scoreboard baseline. When /summary fails or comes back empty the baseline
+ * is still stored, so the match screen is never blank. The outcome is kept
+ * in `details.sync` for the admin diagnostics line.
+ */
+export async function syncMatchDetails({ backfill = false, fetcher = espnSummary, baseline = new Map() } = {}) {
   let fetched = 0;
   let failed = 0;
   for (const m of matchesNeedingDetails({ backfill })) {
+    const base = baseline.get(String(m.espn_id)) || null;
+    let summary = null;
+    let outcome = 'ok';
     try {
-      const details = await fetcher(m.espn_id);
-      const hoursSinceKickoff = (Date.now() - new Date(m.kickoff_utc).getTime()) / 3600000;
-      const final = m.status === 'finished' && (Boolean(details.article) || hoursSinceKickoff >= RECAP_WAIT_HOURS);
-      storeDetails(m.id, 'espn', details, final);
-      fetched += 1;
+      summary = await fetcher(m.espn_id);
+      if (isEmptyDetails(summary)) outcome = 'leeg';
     } catch (err) {
       failed += 1;
+      outcome = `fout: ${String(err.message).slice(0, 160)}`;
       if (failed === 1) log('details', 'espn', false, `wedstrijd ${m.id}: ${err.message}`);
     }
+    const details = mergeDetails(summary, base);
+    if (!details) continue;
+    const hoursSinceKickoff = (Date.now() - new Date(m.kickoff_utc).getTime()) / 3600000;
+    // stop refetching once the recap is in, or RECAP_WAIT_HOURS after kickoff
+    // (also when /summary keeps failing — the scoreboard data is all we'll get)
+    const final = m.status === 'finished' && (Boolean(details.article) || hoursSinceKickoff >= RECAP_WAIT_HOURS);
+    details.sync = { summary: outcome, scoreboard: Boolean(base), at: new Date().toISOString() };
+    storeDetails(m.id, 'espn', details, final);
+    fetched += 1;
   }
-  if (fetched) log('details', 'espn', true, `${fetched} wedstrijddetail(s) bijgewerkt`);
+  if (fetched) log('details', 'espn', true, `${fetched} wedstrijddetail(s) bijgewerkt${failed ? `, ${failed}× summary mislukt (scoreboard-data gebruikt)` : ''}`);
   return { fetched, failed };
 }
