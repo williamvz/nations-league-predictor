@@ -1,10 +1,47 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { Spinner, LiveDot } from '../components/ui';
 import GoalFlash from '../components/GoalFlash';
 import { fmtDay, fmtTime, fmtPoints } from '../utils/format';
 import { useT } from '../i18n';
+import { Badge } from '../components/MatchDetails';
+import { commentaryKind, HEADLINE_KINDS } from '../utils/commentaryKind';
+import { commentaryToDutch } from '../utils/commentaryNl';
+import { actingSide, estimateTime } from '../utils/commentaryTeam';
+
+const FEED_SIZE = 14;
+const RECENT_MS = 3 * 3600_000; // finished matches keep feeding for a while
+
+/**
+ * One combined commentary feed for every live (and just finished) match,
+ * newest first: flag of the acting team, minute, badge, text.
+ */
+function buildFeed(matches, lang) {
+  const lines = [];
+  for (const m of matches) {
+    for (const c of m.details?.commentary || []) {
+      if (!c.text) continue;
+      const kind = commentaryKind(c.text, c.kind);
+      const side = HEADLINE_KINDS.has(kind) ? null : actingSide(c.text, m.home_code, m.away_code);
+      const translate = lang === 'nl' && m.details?.provider !== 'sim';
+      lines.push({
+        key: `${m.id}-${c.seq}`,
+        match: m,
+        minute: c.minute,
+        kind,
+        side,
+        text: translate ? commentaryToDutch(c.text).text : c.text,
+        seen: c.seen || 0,
+        est: estimateTime(m.kickoff_utc, c.minute) ?? 0,
+        seq: c.seq,
+      });
+    }
+  }
+  // real arrival order first; within one sync batch fall back to the match clock
+  lines.sort((a, b) => b.seen - a.seen || b.est - a.est || b.seq - a.seq);
+  return lines.slice(0, FEED_SIZE);
+}
 
 /**
  * TV-modus: full-screen matchday dashboard for the living-room TV or a Home
@@ -12,19 +49,24 @@ import { useT } from '../i18n';
  * leaderboard reshuffling live, and the upcoming schedule. Refreshes itself.
  */
 export default function TV() {
-  const { t, tn } = useT();
+  const { t, tn, lang } = useT();
   const [data, setData] = useState(null);
+  const langRef = useRef(lang);
+  langRef.current = lang;
   const [clock, setClock] = useState(new Date());
 
   async function load() {
     const [all, leaderboard] = await Promise.all([api.matches(), api.leaderboard()]);
     const matches = all.matches;
     const live = matches.filter((m) => m.status === 'live');
-    // enrich live matches with their goal lists
-    const detailed = await Promise.all(live.map((m) => api.match(m.id).then((d) => d.match).catch(() => m)));
+    const justFinished = matches.filter((m) => m.status === 'finished'
+      && Date.now() - new Date(m.kickoff_utc).getTime() < RECENT_MS);
+    // enrich live (and just-finished) matches with goals + commentary
+    const enrich = (list) => Promise.all(list.map((m) => api.match(m.id).then((d) => d.match).catch(() => m)));
+    const [detailed, finishedDetailed] = await Promise.all([enrich(live), enrich(justFinished)]);
     const upcoming = matches.filter((m) => m.status === 'scheduled').slice(0, 6);
     const recent = matches.filter((m) => m.status === 'finished').slice(-4).reverse();
-    setData({ live: detailed, upcoming, recent, leaderboard });
+    setData({ live: detailed, upcoming, recent, leaderboard, feed: buildFeed([...detailed, ...finishedDetailed], langRef.current) });
   }
 
   useEffect(() => {
@@ -38,7 +80,7 @@ export default function TV() {
   }, []);
 
   if (!data) return <div className="flex min-h-screen items-center justify-center"><Spinner /></div>;
-  const { live, upcoming, recent, leaderboard } = data;
+  const { live, upcoming, recent, leaderboard, feed } = data;
   const rows = leaderboard.leaderboard;
 
   return (
@@ -118,31 +160,62 @@ export default function TV() {
           </div>
         </div>
 
-        {/* leaderboard column */}
-        <div className="card self-start p-5">
-          <h2 className="mb-3 flex items-center gap-2 text-xl font-black">
-            🏆 {t('tv.board')} {leaderboard.is_live && <LiveDot />}
-          </h2>
-          <div className="space-y-2">
-            {rows.slice(0, 12).map((r) => (
-              <div key={r.user_id} className={`flex items-center gap-3 rounded-xl p-2 ${r.rank === 1 ? 'bg-oranje-500/15' : ''}`}>
-                <span className="w-8 text-center text-xl font-black text-emerald-50/60">
-                  {['🥇', '🥈', '🥉'][r.rank - 1] || r.rank}
-                </span>
-                <span className="text-2xl">{r.avatar}</span>
-                <span className="flex-1 truncate text-lg font-semibold">{r.display_name}</span>
-                {leaderboard.is_live && r.live_points > 0 && (
-                  <span className="chip animate-pulse-live bg-red-500/15 text-red-300">+{fmtPoints(r.live_points)}</span>
-                )}
-                <span className="text-xl font-black tabular-nums">{fmtPoints(leaderboard.is_live ? r.live_total : r.total_points)}</span>
-              </div>
-            ))}
+        {/* leaderboard + combined live feed column */}
+        <div className="space-y-6 self-start">
+          <div className="card p-5">
+            <h2 className="mb-3 flex items-center gap-2 text-xl font-black">
+              🏆 {t('tv.board')} {leaderboard.is_live && <LiveDot />}
+            </h2>
+            <div className="space-y-2">
+              {rows.slice(0, 12).map((r) => (
+                <div key={r.user_id} className={`flex items-center gap-3 rounded-xl p-2 ${r.rank === 1 ? 'bg-oranje-500/15' : ''}`}>
+                  <span className="w-8 text-center text-xl font-black text-emerald-50/60">
+                    {['🥇', '🥈', '🥉'][r.rank - 1] || r.rank}
+                  </span>
+                  <span className="text-2xl">{r.avatar}</span>
+                  <span className="flex-1 truncate text-lg font-semibold">{r.display_name}</span>
+                  {leaderboard.is_live && r.live_points > 0 && (
+                    <span className="chip animate-pulse-live bg-red-500/15 text-red-300">+{fmtPoints(r.live_points)}</span>
+                  )}
+                  <span className="text-xl font-black tabular-nums">{fmtPoints(leaderboard.is_live ? r.live_total : r.total_points)}</span>
+                </div>
+              ))}
+            </div>
           </div>
+          {feed.length > 0 && <LiveFeed t={t} feed={feed} multi={new Set(feed.map((l) => l.match.id)).size > 1} />}
         </div>
       </div>
 
       {/* faster goal detection on the big screen */}
       <GoalFlash intervalMs={12_000} />
+    </div>
+  );
+}
+
+function LiveFeed({ t, feed, multi }) {
+  return (
+    <div className="card p-5" data-testid="tv-feed">
+      <h2 className="mb-3 flex items-center gap-2 text-xl font-black">📣 {t('tv.feed')}</h2>
+      <div className="divide-y divide-white/5">
+        {feed.map((l) => {
+          const m = l.match;
+          const flag = l.side === 'home' ? m.home_flag : l.side === 'away' ? m.away_flag : null;
+          const headline = HEADLINE_KINDS.has(l.kind);
+          return (
+            <div key={l.key} className={`flex items-start gap-3 py-2 ${headline ? 'py-3' : ''}`} data-testid="tv-feed-line">
+              <span className="w-9 shrink-0 text-center text-2xl leading-7" title={flag ? '' : `${m.home_code}–${m.away_code}`}>
+                {flag || <span className="text-sm leading-7">{m.home_flag}{m.away_flag}</span>}
+              </span>
+              <span className={`w-12 shrink-0 font-black tabular-nums leading-7 text-oranje-300 ${headline ? 'text-lg' : ''}`}>{l.minute || ''}</span>
+              <span className={`flex-1 leading-7 ${headline ? 'font-semibold text-emerald-50' : 'text-emerald-50/85'}`}>
+                {!headline && <Badge t={t} kind={l.kind} />}
+                {l.text}
+                {multi && <span className="ml-2 whitespace-nowrap text-xs text-emerald-50/35">{m.home_code}–{m.away_code}</span>}
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

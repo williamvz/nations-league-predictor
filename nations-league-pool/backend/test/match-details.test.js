@@ -93,3 +93,17 @@ test('deleting a match cascades to its details', () => {
   db.prepare('DELETE FROM matches WHERE id = ?').run(farId);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM match_details WHERE match_id = ?').get(farId).n, 0);
 });
+
+test('commentary lines keep the moment they were first seen', async () => {
+  const id = ids[1];
+  db.prepare('DELETE FROM match_details WHERE match_id = ?').run(id);
+  const line = (seq, text) => ({ seq, minute: `${seq}'`, text, kind: null });
+  storeDetails(id, 'espn', { commentary: [line(1, 'Kick-off.')] });
+  const first = getDetails(id).commentary[0].seen;
+  assert.ok(first > 0);
+  await new Promise((r) => setTimeout(r, 15));
+  storeDetails(id, 'espn', { commentary: [line(2, 'Corner.'), line(1, 'Kick-off.')] });
+  const d = getDetails(id);
+  assert.equal(d.commentary.find((c) => c.seq === 1).seen, first, 'old line keeps its stamp');
+  assert.ok(d.commentary.find((c) => c.seq === 2).seen > first, 'new line is newer');
+});

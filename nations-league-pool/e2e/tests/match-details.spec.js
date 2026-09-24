@@ -31,6 +31,9 @@ test('finished match: every tab shows its content', async ({ page, request }) =>
 
   await page.getByTestId('tab-live').click();
   await expect(page.getByTestId('commentary')).toContainText('Einde wedstrijd');
+  // every simulated match has three subs per side → WISSEL badges; kick-off/end are headlines
+  await expect(page.getByTestId('badge-substitution').first()).toContainText('Wissel');
+  await expect(page.getByTestId('commentary-headline').first()).toBeVisible();
 
   await page.getByTestId('tab-report').click();
   await expect(page.getByTestId('report')).toContainText(m.details.article.headline);
@@ -69,4 +72,23 @@ test('match screen follows the chosen language', async ({ page, request }, info)
   await expect(page.getByTestId('tab-stats')).toHaveText('Stats');
   await page.getByTestId('tab-stats').click();
   await expect(page.getByTestId('stats')).toContainText('Possession');
+});
+
+test('TV mode: combined live feed with the acting team\'s flag', async ({ page, request }) => {
+  const token = await apiLogin(request);
+  const m = await waitForFinishedMatchWithDetails(request, token);
+  await uiLogin(page);
+  await page.goto('/#/tv');
+  const feed = page.getByTestId('tv-feed');
+  await expect(feed).toBeVisible();
+  await expect(feed).toContainText('Live-verslag');
+  const lines = page.getByTestId('tv-feed-line');
+  expect(await lines.count()).toBeGreaterThan(3);
+  // at least one line starts with a team flag (the feed holds the most
+  // recent lines, which may come from any of the matches playing)
+  const { data } = await api(request, token, 'GET', '/matches');
+  const flags = [...new Set(data.matches.flatMap((x) => [x.home_flag, x.away_flag]))];
+  expect(m.details.commentary.length).toBeGreaterThan(0);
+  const texts = await lines.allTextContents();
+  expect(texts.some((tx) => flags.some((f) => tx.startsWith(f)))).toBeTruthy();
 });

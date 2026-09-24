@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.0
+
+- 🏷️ **Badges in het live-verslag**: elke belangrijke regel krijgt een label met icoon: ⚽ Goal, 🟨 Kaart, 🟥 Rood, ⇄ Wissel, 🧤 Redding, 🎯 Kans, 🥅 Paal/lat, ⛳ Corner, 🚩 Buitenspel, 📺 VAR, ⚠️ Strafschop, 🩹 Blessure. Aftrap, rust, einde en blessuretijd staan als grote, vette regel in het verslag, zodat je het verloop in één oogopslag ziet. Goals en rode kaarten zijn daarnaast gekleurd gemarkeerd.
+- 📺 **Gecombineerd live-verslag in TV-modus**: naast de ranglijst loopt nu één verslag van álle wedstrijden die bezig zijn (en die net afgelopen zijn), nieuwste bovenaan. Elke regel krijgt de vlag van het land dat aan zet is, plus de badge; spelen er meerdere wedstrijden tegelijk, dan staat de wedstrijd (bijv. NED–GER) erachter. Regels zonder duidelijke partij, zoals "Einde wedstrijd", krijgen beide vlaggen. Regels worden gesorteerd op het moment dat ze binnenkwamen, zodat wedstrijden met verschillende aftrap netjes door elkaar lopen.
+
 ## 1.8.1
 
 - Fix: onder **Verslag** kon het wedstrijdverslag van een ándere wedstrijd staan (bij Nederland–Duitsland verscheen "Portugal edge Wales…"). Had ESPN geen eigen verslag, dan pakte de app het eerste verslag uit ESPN's algemene nieuwslijst. Zo'n verslag wordt nu alleen nog getoond als het aantoonbaar over deze wedstrijd gaat. Bij de update worden de eerder opgeslagen verslagen eenmalig opnieuw opgehaald, zodat de foute verdwijnen.

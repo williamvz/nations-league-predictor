@@ -365,12 +365,30 @@ export function inLiveWindow() {
 export const RECAP_WAIT_HOURS = 8;
 
 export function storeDetails(matchId, provider, details, final = false) {
+  stampCommentary(matchId, details);
   db.prepare(`
     INSERT INTO match_details (match_id, provider, data, complete, updated_at)
     VALUES (?, ?, ?, ?, datetime('now'))
     ON CONFLICT(match_id) DO UPDATE SET provider = excluded.provider, data = excluded.data,
       complete = excluded.complete, updated_at = excluded.updated_at
   `).run(matchId, provider, JSON.stringify(details), final ? 1 : 0);
+}
+
+/**
+ * Give every commentary line the moment we first saw it (`seen`, epoch ms),
+ * keeping earlier stamps. Lets the TV mode merge the commentary of several
+ * matches into one feed in real order; a match minute alone can't do that.
+ */
+function stampCommentary(matchId, details) {
+  if (!details?.commentary?.length) return;
+  let before = new Map();
+  try {
+    const row = db.prepare('SELECT data FROM match_details WHERE match_id = ?').get(matchId);
+    const old = row ? JSON.parse(row.data).commentary || [] : [];
+    before = new Map(old.filter((c) => c.seen).map((c) => [`${c.seq}|${c.text}`, c.seen]));
+  } catch { /* unreadable old row: stamp everything fresh */ }
+  const now = Date.now();
+  for (const c of details.commentary) c.seen = before.get(`${c.seq}|${c.text}`) ?? now;
 }
 
 export function getDetails(matchId) {

@@ -29,7 +29,7 @@ Tik op een wedstrijd voor alles wat er te weten valt. Terwijl je kijkt ververst 
 | **Overzicht** | Tijdlijn met doelpunten (en assist), kaarten, wissels en VAR-momenten; balbezit en schoten in één oogopslag; stadion, scheidsrechter, toeschouwers en eerdere onderlinge duels |
 | **Statistieken** | Balbezit, schoten (op doel), hoekschoppen, overtredingen, kaarten, buitenspel, reddingen, passes en passnauwkeurigheid, voorzetten, tackles en onderscheppingen |
 | **Opstellingen** | Formatie, basiself met rugnummers, de bank; ▲ ingevallen / ▼ gewisseld |
-| **Live-verslag** | Minuut-voor-minuut tekstverslag van ESPN, nieuwste bovenaan. In het Nederlands vertaald als je de app in het Nederlands gebruikt; **🇬🇧 Origineel** toont de Engelse tekst |
+| **Live-verslag** | Minuut-voor-minuut tekstverslag van ESPN, nieuwste bovenaan, met badges (⚽ Goal, 🟨 Kaart, ⇄ Wissel, 🧤 Redding, ⛳ Corner, 🚩 Buitenspel, 📺 VAR…) en aftrap/rust/einde als grote regels. In het Nederlands vertaald als je de app in het Nederlands gebruikt; **🇬🇧 Origineel** toont de Engelse tekst |
 | **Verslag** | Het geschreven wedstrijdverslag, zodra dat na het laatste fluitsignaal verschijnt |
 | **Voorspellingen** | Consensus-heatmap en ieders voorspelling (pas na de aftrap) |
 
@@ -44,7 +44,7 @@ Goed om te weten:
 ## 🎇 Wedstrijddag-spektakel
 
 - **⚽ GOAL-flash**: valt er een doelpunt tijdens een live wedstrijd, dan neemt de app even het scherm over — vlag, doelpuntenmaker, nieuwe stand, confetti en een trilsignaal op je telefoon.
-- **📺 TV-modus** (*Meer → TV-modus*, of direct `/#/tv`): een fullscreen wedstrijddag-dashboard voor de tv of een muurtablet — grote live scoreborden met doelpuntenmakers en tikkende klok, de familieranglijst die live herschikt, en het komende programma. Ververst zichzelf; ideaal als Webpage-kaart in een Home Assistant-dashboard.
+- **📺 TV-modus** (*Meer → TV-modus*, of direct `/#/tv`): een fullscreen wedstrijddag-dashboard voor de tv of een muurtablet — grote live scoreborden met doelpuntenmakers en tikkende klok, de familieranglijst die live herschikt, één gecombineerd live-verslag van alle wedstrijden die bezig zijn (met de vlag van het land dat aan zet is en badges voor goals, kaarten, wissels…), en het komende programma. Ververst zichzelf; ideaal als Webpage-kaart in een Home Assistant-dashboard.
 - **🏠 Automatiseringen**: de add-on vuurt events af op de Home Assistant-eventbus — bouw er je eigen lichtshow mee! Events: `nlpool_goal` (met `team_code`, `team`, `player`, `minute`, `score`) en `nlpool_result` (met `home`, `away`, `score`, `stage`). Voorbeeld — woonkamer oranje bij een goal van Nederland:
 
 ```yaml
