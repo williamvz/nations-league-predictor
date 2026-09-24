@@ -1,0 +1,112 @@
+{
+  "header": {
+    "id": "700123",
+    "competitions": [{
+      "id": "700123",
+      "date": "2026-09-05T18:45Z",
+      "status": { "type": { "state": "post", "completed": true, "description": "Full Time" } },
+      "competitors": [
+        { "id": "449", "homeAway": "home", "score": "2", "team": { "id": "449", "displayName": "Netherlands" } },
+        { "id": "481", "homeAway": "away", "score": "1", "team": { "id": "481", "displayName": "Germany" } }
+      ]
+    }]
+  },
+  "boxscore": {
+    "teams": [
+      { "homeAway": "home", "team": { "id": "449" }, "statistics": [
+        { "name": "foulsCommitted", "displayValue": "12", "label": "Fouls" },
+        { "name": "yellowCards", "displayValue": "2" },
+        { "name": "redCards", "displayValue": "0" },
+        { "name": "offsides", "displayValue": "1" },
+        { "name": "wonCorners", "displayValue": "6" },
+        { "name": "saves", "displayValue": "3" },
+        { "name": "possessionPct", "displayValue": "54.3" },
+        { "name": "totalShots", "displayValue": "14" },
+        { "name": "shotsOnTarget", "displayValue": "5" },
+        { "name": "accuratePasses", "displayValue": "421" },
+        { "name": "totalPasses", "displayValue": "502" },
+        { "name": "passPct", "displayValue": "0.84" },
+        { "name": "someUnknownStat", "displayValue": "7" }
+      ] },
+      { "homeAway": "away", "team": { "id": "481" }, "statistics": [
+        { "name": "foulsCommitted", "displayValue": "9" },
+        { "name": "yellowCards", "displayValue": "1" },
+        { "name": "redCards", "displayValue": "1" },
+        { "name": "offsides", "displayValue": "3" },
+        { "name": "wonCorners", "displayValue": "4" },
+        { "name": "saves", "displayValue": "3" },
+        { "name": "possessionPct", "displayValue": "45.7" },
+        { "name": "totalShots", "displayValue": "10" },
+        { "name": "shotsOnTarget", "displayValue": "4" },
+        { "name": "accuratePasses", "displayValue": "350" },
+        { "name": "totalPasses", "displayValue": "430" },
+        { "name": "passPct", "displayValue": "0.81" }
+      ] }
+    ]
+  },
+  "keyEvents": [
+    { "id": "1", "type": { "id": "80", "text": "Kickoff" }, "clock": { "displayValue": "0'" }, "text": "First Half begins." },
+    { "id": "2", "type": { "id": "70", "text": "Goal" }, "scoringPlay": true, "clock": { "displayValue": "23'" },
+      "team": { "id": "449", "displayName": "Netherlands" },
+      "participants": [{ "athlete": { "displayName": "Cody Gakpo" } }, { "athlete": { "displayName": "Xavi Simons" } }],
+      "text": "Goal! Netherlands 1, Germany 0. Cody Gakpo (Netherlands) left footed shot from the centre of the box. Assisted by Xavi Simons." },
+    { "id": "3", "type": { "id": "94", "text": "Yellow Card" }, "clock": { "displayValue": "31'" },
+      "team": { "id": "481" }, "participants": [{ "athlete": { "displayName": "Joshua Kimmich" } }],
+      "text": "Joshua Kimmich (Germany) is shown the yellow card for a bad foul." },
+    { "id": "4", "type": { "id": "81", "text": "Halftime" }, "clock": { "displayValue": "45'+2'" }, "text": "First Half ends, Netherlands 1, Germany 0." },
+    { "id": "5", "type": { "id": "137", "text": "Penalty - Scored" }, "scoringPlay": true, "clock": { "displayValue": "52'" },
+      "team": { "id": "481" }, "participants": [{ "athlete": { "displayName": "Kai Havertz" } }],
+      "text": "Goal! Netherlands 1, Germany 1. Kai Havertz (Germany) converts the penalty with a right footed shot." },
+    { "id": "6", "type": { "id": "76", "text": "Substitution" }, "clock": { "displayValue": "63'" },
+      "team": { "id": "449" }, "participants": [{ "athlete": { "displayName": "Wout Weghorst" } }, { "athlete": { "displayName": "Memphis Depay" } }],
+      "text": "Substitution, Netherlands. Wout Weghorst replaces Memphis Depay." },
+    { "id": "7", "type": { "id": "93", "text": "Red Card" }, "clock": { "displayValue": "71'" },
+      "team": { "id": "481" }, "participants": [{ "athlete": { "displayName": "Antonio Rüdiger" } }],
+      "text": "Antonio Rüdiger (Germany) is shown the red card." },
+    { "id": "8", "type": { "id": "70", "text": "Goal" }, "scoringPlay": true, "clock": { "displayValue": "88'" },
+      "team": { "id": "449" }, "participants": [{ "athlete": { "displayName": "Wout Weghorst" } }],
+      "text": "Goal! Netherlands 2, Germany 1. Wout Weghorst (Netherlands) header from very close range." },
+    { "id": "9", "type": { "id": "84", "text": "End Regular Time" }, "clock": { "displayValue": "90'+4'" }, "text": "Match ends, Netherlands 2, Germany 1." }
+  ],
+  "rosters": [
+    { "homeAway": "home", "formation": "4-3-3", "team": { "id": "449" }, "roster": [
+      { "starter": true, "jersey": "1", "formationPlace": "1", "athlete": { "displayName": "Bart Verbruggen" }, "position": { "abbreviation": "G" } },
+      { "starter": true, "jersey": "4", "formationPlace": "5", "athlete": { "displayName": "Virgil van Dijk" }, "position": { "abbreviation": "CD-L" } },
+      { "starter": true, "jersey": "10", "formationPlace": "10", "subbedOut": true, "athlete": { "displayName": "Memphis Depay" }, "position": { "abbreviation": "F" } },
+      { "starter": false, "jersey": "9", "subbedIn": true, "athlete": { "displayName": "Wout Weghorst" }, "position": { "abbreviation": "SUB" } }
+    ] },
+    { "homeAway": "away", "formation": "4-2-3-1", "team": { "id": "481" }, "roster": [
+      { "starter": true, "jersey": "1", "formationPlace": "1", "athlete": { "displayName": "Marc-André ter Stegen" }, "position": { "abbreviation": "G" } },
+      { "starter": true, "jersey": "7", "formationPlace": "9", "athlete": { "displayName": "Kai Havertz" }, "position": { "abbreviation": "F" } }
+    ] }
+  ],
+  "commentary": [
+    { "sequence": 1, "time": { "displayValue": "" }, "text": "Lineups are announced and players are warming up." },
+    { "sequence": 2, "time": { "displayValue": "1'" }, "text": "First Half begins." },
+    { "sequence": 30, "time": { "displayValue": "23'" }, "text": "Goal! Netherlands 1, Germany 0. Cody Gakpo (Netherlands) left footed shot.", "play": { "type": { "text": "Goal" }, "scoringPlay": true } },
+    { "sequence": 90, "time": { "displayValue": "90'+4'" }, "text": "Match ends, Netherlands 2, Germany 1." },
+    { "sequence": 91, "time": { "displayValue": "" }, "text": "" }
+  ],
+  "gameInfo": {
+    "venue": { "fullName": "Johan Cruijff ArenA", "address": { "city": "Amsterdam", "country": "Netherlands" } },
+    "attendance": 54033,
+    "officials": [
+      { "displayName": "Some Linesman", "position": { "name": "Assistant Referee" } },
+      { "displayName": "Clément Turpin", "position": { "name": "Referee" } }
+    ]
+  },
+  "headToHeadGames": [
+    { "team": { "id": "449" }, "events": [
+      { "gameDate": "2024-10-14T18:45Z", "homeTeamId": "481", "awayTeamId": "449", "homeTeamScore": "1", "awayTeamScore": "0", "leagueName": "UEFA Nations League" },
+      { "gameDate": "2024-09-10T18:45Z", "homeTeamId": "449", "awayTeamId": "481", "homeTeamScore": "2", "awayTeamScore": "2", "leagueName": "UEFA Nations League" }
+    ] },
+    { "team": { "id": "481" }, "events": [] }
+  ],
+  "article": {
+    "headline": "Weghorst late show sinks ten-man Germany",
+    "description": "Wout Weghorst headed a late winner.",
+    "story": "<p>AMSTERDAM &mdash; Wout Weghorst came off the bench to head a late winner.</p><p>Cody Gakpo had opened the scoring &amp; Kai Havertz levelled from the spot.</p><script>alert(1)</script><p>Germany&#39;s night got worse when R&uuml;diger saw red.</p>",
+    "links": { "web": { "href": "https://www.espn.com/soccer/report/_/gameId/700123" } },
+    "published": "2026-09-05T21:10Z"
+  }
+}

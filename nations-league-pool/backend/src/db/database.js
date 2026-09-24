@@ -175,6 +175,16 @@ CREATE TABLE IF NOT EXISTS recaps (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- rich match info from the provider (stats, timeline, line-ups, commentary,
+-- recap) stored as one normalized JSON blob per match
+CREATE TABLE IF NOT EXISTS match_details (
+  match_id INTEGER PRIMARY KEY REFERENCES matches(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL,
+  data TEXT NOT NULL,
+  complete INTEGER NOT NULL DEFAULT 0,       -- 1 = final version (post-match, recap fetched or given up)
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL

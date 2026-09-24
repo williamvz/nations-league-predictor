@@ -1,5 +1,5 @@
 import db, { getSetting } from '../db/database.js';
-import { fetchEvents as espnFetch } from './providers/espn.js';
+import { fetchEvents as espnFetch, fetchSummary as espnSummary } from './providers/espn.js';
 import { fetchSeason as tsdbFetch } from './providers/sportsdb.js';
 import { findTeam, findMatch, rememberProviderId } from './matcher.js';
 import { processMatchResult } from '../services/scoring.js';
@@ -26,6 +26,15 @@ async function syncSimulated() {
   const events = fetchSimulatedEvents();
   let matched = 0;
   for (const ev of events) if (applyEvent(ev, 'sim', { updateKickoff: false }).matched) matched += 1;
+  for (const ev of events) {
+    if (!ev.details) continue;
+    const m = db.prepare(`
+      SELECT m.id, d.complete FROM matches m LEFT JOIN match_details d ON d.match_id = m.id
+      WHERE json_extract(m.provider_ids, '$.sim') = ?
+    `).get(ev.providerId);
+    // finished + stored once = final; don't rewrite it on every 20s tick
+    if (m && !m.complete) storeDetails(m.id, 'sim', ev.details, ev.status === 'finished');
+  }
   if (matched > 0) log('scores', 'sim', true, `${events.length} gesimuleerde events, ${matched} verwerkt`);
   // no classifyFinals here: simulated events carry explicit, correct stages
   resolveBonusQuestions();
@@ -245,7 +254,11 @@ export async function syncScores() {
   if (!syncEnabled()) return { skipped: true };
   if (DEMO_MODE) return syncSimulated();
   const dates = datesNeedingScores();
-  if (dates.length === 0) return { skipped: true, reason: 'geen wedstrijden in venster' };
+  if (dates.length === 0) {
+    // line-ups appear ~1h before kickoff, recaps hours after the whistle
+    await syncMatchDetails().catch(() => {});
+    return { skipped: true, reason: 'geen wedstrijden in venster' };
+  }
 
   const range = dates.length === 1 ? dates[0] : `${dates[0]}-${dates[dates.length - 1]}`;
   let matched = 0;
@@ -255,6 +268,7 @@ export async function syncScores() {
     log('scores', 'espn', true, `${events.length} events, ${matched} gematcht (${range})`);
     classifyFinals();
     resolveBonusQuestions();
+    await syncMatchDetails();
     return { provider: 'espn', matched };
   } catch (err) {
     log('scores', 'espn', false, err.message);
@@ -308,6 +322,7 @@ export async function syncFixtures() {
   }
   classifyFinals();
   resolveBonusQuestions();
+  await syncMatchDetails({ backfill: true });
   return { ok };
 }
 
@@ -331,4 +346,77 @@ export function inLiveWindow() {
            AND datetime(kickoff_utc) >= datetime('now', '-4 hours'))
   `).get();
   return row.n > 0;
+}
+
+// ---------------------------------------------------------------------------
+// Match details (stats, timeline, line-ups, commentary, recap)
+// ---------------------------------------------------------------------------
+
+/** Hours after kickoff we keep refetching a finished match waiting for its recap. */
+export const RECAP_WAIT_HOURS = 8;
+
+export function storeDetails(matchId, provider, details, final = false) {
+  db.prepare(`
+    INSERT INTO match_details (match_id, provider, data, complete, updated_at)
+    VALUES (?, ?, ?, ?, datetime('now'))
+    ON CONFLICT(match_id) DO UPDATE SET provider = excluded.provider, data = excluded.data,
+      complete = excluded.complete, updated_at = excluded.updated_at
+  `).run(matchId, provider, JSON.stringify(details), final ? 1 : 0);
+}
+
+export function getDetails(matchId) {
+  const row = db.prepare('SELECT data, provider, updated_at FROM match_details WHERE match_id = ?').get(matchId);
+  if (!row) return null;
+  try {
+    return { ...JSON.parse(row.data), provider: row.provider, updated_at: row.updated_at };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Which matches need a (re)fetch of their ESPN summary:
+ *  - every live match, every poll (stats/commentary move by the minute)
+ *  - finished matches until marked complete: the recap article usually
+ *    appears some time after the final whistle
+ *  - with backfill: also scheduled matches kicking off within 2 hours
+ *    (line-ups are published ~1h before kickoff) and any finished match
+ *    that never got details (the Pi was off)
+ */
+export function matchesNeedingDetails({ backfill = false } = {}) {
+  return db.prepare(`
+    SELECT m.id, m.status, m.kickoff_utc, json_extract(m.provider_ids, '$.espn') AS espn_id,
+           d.complete, d.match_id IS NOT NULL AS has_details
+    FROM matches m LEFT JOIN match_details d ON d.match_id = m.id
+    WHERE json_extract(m.provider_ids, '$.espn') IS NOT NULL
+      AND (
+        m.status = 'live'
+        OR (m.status = 'finished' AND COALESCE(d.complete, 0) = 0
+            AND (? = 1 OR datetime(m.kickoff_utc) >= datetime('now', '-${RECAP_WAIT_HOURS + 4} hours')))
+        OR (m.status = 'scheduled'
+            AND datetime(m.kickoff_utc) <= datetime('now', '+90 minutes')
+            AND datetime(m.kickoff_utc) >= datetime('now', '-4 hours'))
+      )
+    ORDER BY m.kickoff_utc ASC
+    LIMIT 24
+  `).all(backfill ? 1 : 0);
+}
+
+export async function syncMatchDetails({ backfill = false, fetcher = espnSummary } = {}) {
+  let fetched = 0;
+  let failed = 0;
+  for (const m of matchesNeedingDetails({ backfill })) {
+    try {
+      const details = await fetcher(m.espn_id);
+      const hoursSinceKickoff = (Date.now() - new Date(m.kickoff_utc).getTime()) / 3600000;
+      const final = m.status === 'finished' && (Boolean(details.article) || hoursSinceKickoff >= RECAP_WAIT_HOURS);
+      storeDetails(m.id, 'espn', details, final);
+      fetched += 1;
+    } catch (err) {
+      failed += 1;
+      if (failed === 1) log('details', 'espn', false, `wedstrijd ${m.id}: ${err.message}`);
+    }
+  }
+  if (fetched) log('details', 'espn', true, `${fetched} wedstrijddetail(s) bijgewerkt`);
+  return { fetched, failed };
 }

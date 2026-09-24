@@ -2,7 +2,7 @@
 
 A prediction-pool app for the **UEFA Nations League 2026/27 (League A)** — the successor to [Pepijn's World Cup app](https://github.com/williamvz/pepijns-world-cup-prediction-app), rebuilt to be **maintenance-free**: match results, live scores, standings, top scorers and bonus questions all update automatically. Nobody has to type in a single result.
 
-Runs as a **Home Assistant add-on** on a Raspberry Pi (or standalone with Docker). Dutch UI, mobile-first PWA.
+Runs as a **Home Assistant add-on** on a Raspberry Pi (or standalone with Docker). Mobile-first PWA in six languages (NL, EN, FR, ES, DE, IT).
 
 ## ✨ What's new compared to the World Cup app
 
@@ -10,6 +10,7 @@ Runs as a **Home Assistant add-on** on a Raspberry Pi (or standalone with Docker
 |---|---|---|
 | Results entry | 100+ manual admin entries | **Fully automatic** (ESPN + TheSportsDB) |
 | Live scores | ✗ | ✅ every 2 min during matches, live leaderboard |
+| Match centre | ✗ | ✅ timeline, team stats, line-ups, live commentary and the written match report per match |
 | Standings | internal only | ✅ live group tables with UEFA tie-breakers, form, insights |
 | Top scorers | manual free-text bonus | ✅ synced per-goal, auto-resolved bonus question |
 | Bonus grading | fragile string compare | ✅ automatic (standings/scorer based) |
@@ -42,7 +43,9 @@ Database lives at `/data/nlpool.db` inside the add-on → covered by normal HA b
 
 Set `demo_mode: true` in the add-on config (or `DEMO_MODE=1` standalone) and restart: the app plays a **complete simulated season in ~1 hour** on a separate database (`nlpool-demo.db`) — live scores tick in, goals get scorers, standings update, the knockout bracket self-creates, bonus questions pay out and a champion is crowned, with 3 bot players keeping the leaderboard honest. Push/HA notifications fire for real, so you can verify your phone setup end to end. Flip it back off and the real database is exactly as you left it. A purple in-app banner marks demo state.
 
-The same simulation also runs headless in CI: `test/season.test.js` plays the full tournament through the sync engine and asserts points, standings, snapshots, scorers, bonus payouts, achievements and leaderboard consistency.
+Demo mode also fills the match centre: every simulated match gets statistics, a timeline with cards and subs, line-ups, running commentary and a written (Dutch) report, all shaped exactly like the ESPN data.
+
+The same simulation also runs headless in the test suite: `test/season.test.js` plays the full tournament through the sync engine and asserts points, standings, snapshots, scorers, bonus payouts, achievements and leaderboard consistency.
 
 ## 🐳 Standalone (without Home Assistant)
 
@@ -56,13 +59,15 @@ docker compose up -d --build
 
 ```
 node-cron (in-process, Europe/Amsterdam)
-├─ every 2 min   — only while a match is live or starts <30 min: live scores, minute, goals
-├─ every 20 min  — safety sweep: any missed final results
+├─ every 2 min   — only while a match is live or starts <30 min: live scores, minute, goals,
+│                  match details (stats, timeline, commentary)
+├─ every 20 min  — safety sweep: missed final results, line-ups (~1h before kickoff),
+│                  match reports (retried up to 8h after the final whistle)
 ├─ daily 05:30   — fixture calendar sync (kickoff changes, postponements)
 └─ at boot       — catch-up for everything missed while the Pi was off
 ```
 
-- **Primary source:** ESPN public API (scores, live minute, goal scorers)
+- **Primary source:** ESPN public API — the scoreboard for scores, live minute and goal scorers; the per-match `summary` endpoint for team statistics, key events (cards, subs, VAR), line-ups, live commentary, venue/referee, head-to-head and the post-match recap. That payload is normalized into one JSON blob per match (`match_details` table) and served with `GET /api/matches/:id` as `details`. Every section is optional: ESPN often skips commentary or a recap for smaller matches, and the UI only shows the tabs it has data for.
 - **Fallback:** TheSportsDB (scores + schedule)
 - Team names are matched via normalized aliases (`Türkiye`/`Turkey`, `Czechia`/`Czech Republic`, …); provider match-IDs are remembered after first contact.
 - When a match finishes: points are recalculated idempotently, users get a notification, the matchday is finalized (leaderboard snapshot → rank-movement achievements, day-winner announcement) and bonus questions resolve themselves (group winners, Netherlands points, top scorer).
@@ -102,11 +107,26 @@ nations-league-pool/       # the add-on (= the whole app)
 │  ├─ src/routes/          # REST API (auth, predictions, leaderboard, …)
 │  ├─ src/services/        # scoring, standings, achievements, bonus, notify
 │  ├─ src/sync/            # providers (ESPN, TheSportsDB), matcher, scheduler
-│  └─ test/                # node:test suite (scoring, standings, e2e flow)
-└─ frontend/               # React 18 + Vite + Tailwind PWA (Dutch)
+│  └─ test/                # node:test suite (unit, sync, full HTTP API)
+├─ frontend/               # React 18 + Vite + Tailwind PWA (6 languages)
+└─ e2e/                    # Playwright browser tests (demo-mode season)
 ```
 
-Dev: `cd nations-league-pool/backend && npm i && JWT_SECRET=dev npm run dev`, then `cd ../frontend && npm i && npm run dev` (Vite proxies `/api`). Tests: `npm test` in `backend/`.
+Dev: `cd nations-league-pool/backend && npm i && JWT_SECRET=dev npm run dev`, then `cd ../frontend && npm i && npm run dev` (Vite proxies `/api`).
+
+### 🧪 Testing
+
+```bash
+cd nations-league-pool
+./test.sh            # everything: backend suite + frontend build + browser tests
+./test.sh backend    # node:test only (~10 s): scoring, sync, ESPN parser, full HTTP API
+./test.sh e2e        # Playwright only: builds the frontend, boots the app in demo mode, clicks through it
+```
+
+- `backend/test/api.test.js` walks the whole REST API over HTTP (register → approve → predict → result → leaderboard → admin).
+- `backend/test/espn-summary.test.js` pins the ESPN match-detail parser against `test/fixtures/espn-summary.json`.
+- `e2e/tests/*.spec.js` run in desktop and mobile Chrome. Failures leave a screenshot and trace in `e2e/test-results/` (`npx playwright show-trace …`).
+- No Playwright browser downloaded? Point it at any Chromium: `PLAYWRIGHT_CHROMIUM=/usr/bin/chromium ./test.sh e2e`.
 
 ---
 

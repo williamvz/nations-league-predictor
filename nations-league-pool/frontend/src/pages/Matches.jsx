@@ -5,6 +5,7 @@ import { Spinner, Modal, LiveDot } from '../components/ui';
 import MatchCard from '../components/MatchCard';
 import { groupBy, fmtFull, fmtPoints } from '../utils/format';
 import { useT, roundLabelT, matchContextT } from '../i18n';
+import { detailTabs, TabBar, Timeline, MatchInfo, HeadToHead, Stats, Lineups, Commentary, Report } from '../components/MatchDetails';
 
 const FILTERS = [
   { key: 'alle', label: 'matches.all' },
@@ -164,33 +165,51 @@ function ConsensusHeatmap({ t, predictions, homeName, awayName, actual }) {
 function MatchDetail({ id, onClose }) {
   const { t, tn } = useT();
   const [detail, setDetail] = useState(null);
+  const [tab, setTab] = useState('overview');
 
   useEffect(() => {
+    setTab('overview');
     if (!id) {
       setDetail(null);
       return;
     }
     let stop = false;
-    api.match(id).then((d) => !stop && setDetail(d.match)).catch(() => {});
+    const load = () => api.match(id).then((d) => !stop && setDetail(d.match)).catch(() => {});
+    load();
+    // live matches: stats and commentary move by the minute
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') load();
+    }, 30_000);
     return () => {
       stop = true;
+      clearInterval(timer);
     };
   }, [id]);
 
   if (!id) return null;
-  const m = detail;
+  const m = detail && String(detail.id) === String(id) ? detail : null;
+  const d = m?.details;
+  const hasPool = !!m?.all_predictions;
+  const tabs = m ? detailTabs(d, { hasPool }) : [];
+  const active = tabs.includes(tab) ? tab : 'overview';
+  const tnm = (code, name) => tn(code, name);
 
   return (
     <Modal open={!!id} onClose={onClose} title={m ? `${m.home_flag} ${tn(m.home_code, m.home_name)} – ${tn(m.away_code, m.away_name)} ${m.away_flag}` : t('common.loading')} wide>
       {!m ? (
         <Spinner />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4" data-testid="match-detail">
           <div className="text-center">
             {m.status !== 'scheduled' ? (
-              <div className="text-4xl font-black tabular-nums">
+              <div className="text-4xl font-black tabular-nums" data-testid="detail-score">
                 {m.home_score}–{m.away_score}
-                {m.status === 'live' && <div className="mt-1 flex justify-center"><LiveDot /></div>}
+                {m.status === 'live' && (
+                  <div className="mt-1 flex items-center justify-center gap-2">
+                    <LiveDot />
+                    {m.minute && <span className="text-sm font-semibold text-red-400">{m.minute}</span>}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-emerald-50/60">{fmtFull(m.kickoff_utc)}</div>
@@ -198,28 +217,50 @@ function MatchDetail({ id, onClose }) {
             <div className="mt-1 text-xs text-emerald-50/40">{matchContextT(t, m)}</div>
           </div>
 
-          {m.goals?.length > 0 && (
-            <div className="card p-3">
-              <h3 className="mb-2 text-sm font-bold text-emerald-50/60">⚽ {t('matches.goals')}</h3>
-              {m.goals.map((g, i) => (
-                <div key={i} className="flex items-center gap-2 py-0.5 text-sm">
-                  <span className="w-10 text-emerald-50/40">{g.minute || ''}</span>
-                  <span>{g.player_name}</span>
-                  {g.event_type === 'own_goal' && <span className="text-xs text-red-400">{t('matches.ownGoal')}</span>}
-                  {g.event_type === 'penalty' && <span className="text-xs text-emerald-50/40">{t('matches.penalty')}</span>}
-                  <span className="ml-auto text-xs text-emerald-50/40">{g.team_code}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          <TabBar t={t} tabs={tabs} active={active} onChange={setTab} />
 
-          {m.all_predictions && m.all_predictions.length > 1 && (
+          {active === 'overview' && (
+            <>
+              {d?.timeline?.length ? (
+                <Timeline t={t} m={m} details={d} />
+              ) : m.goals?.length > 0 && (
+                <div className="card p-3">
+                  <h3 className="mb-2 text-sm font-bold text-emerald-50/60">⚽ {t('matches.goals')}</h3>
+                  {m.goals.map((g, i) => (
+                    <div key={i} className="flex items-center gap-2 py-0.5 text-sm">
+                      <span className="w-10 text-emerald-50/40">{g.minute || ''}</span>
+                      <span>{g.player_name}</span>
+                      {g.event_type === 'own_goal' && <span className="text-xs text-red-400">{t('matches.ownGoal')}</span>}
+                      {g.event_type === 'penalty' && <span className="text-xs text-emerald-50/40">{t('matches.penalty')}</span>}
+                      <span className="ml-auto text-xs text-emerald-50/40">{g.team_code}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {d?.stats?.length > 0 && <MiniStats t={t} d={d} onMore={() => setTab('stats')} />}
+              {d?.article && (
+                <button className="card block w-full p-3 text-left" onClick={() => setTab('report')}>
+                  <div className="text-xs font-bold uppercase tracking-wide text-oranje-300">📰 {t('detail.tab.report')}</div>
+                  <div className="font-bold">{d.article.headline}</div>
+                </button>
+              )}
+              <MatchInfo t={t} details={d} m={m} />
+              <HeadToHead t={t} details={d} m={m} tn={tnm} />
+              {!d && m.status === 'scheduled' && <p className="text-center text-sm text-emerald-50/40">{t('detail.soon')}</p>}
+            </>
+          )}
+          {active === 'stats' && <Stats t={t} details={d} m={m} />}
+          {active === 'lineups' && <Lineups t={t} details={d} m={m} tn={tnm} />}
+          {active === 'live' && <Commentary t={t} details={d} live={m.status === 'live'} />}
+          {active === 'report' && <Report t={t} details={d} />}
+
+          {active === 'pool' && m.all_predictions && m.all_predictions.length > 1 && (
             <ConsensusHeatmap t={t} predictions={m.all_predictions} homeName={tn(m.home_code, m.home_name)} awayName={tn(m.away_code, m.away_name)}
               actual={m.home_score != null ? { h: m.home_score, a: m.away_score } : null} />
           )}
 
-          {m.all_predictions && (
-            <div className="card p-3">
+          {active === 'pool' && m.all_predictions && (
+            <div className="card p-3" data-testid="all-predictions">
               <h3 className="mb-2 text-sm font-bold text-emerald-50/60">👥 {t('matches.allPredictions')}</h3>
               {m.all_predictions.length === 0 && <p className="text-sm text-emerald-50/40">{t('matches.nobody')}</p>}
               {m.all_predictions.map((p, i) => (
@@ -240,5 +281,23 @@ function MatchDetail({ id, onClose }) {
         </div>
       )}
     </Modal>
+  );
+}
+
+/** Three headline numbers on the overview tab. */
+function MiniStats({ t, d, onMore }) {
+  const pick = ['possessionPct', 'totalShots', 'shotsOnTarget']
+    .map((k) => d.stats.find((s) => s.key === k))
+    .filter(Boolean);
+  if (!pick.length) return null;
+  return (
+    <button className="card grid w-full grid-cols-3 gap-2 p-3 text-center" onClick={onMore} data-testid="mini-stats">
+      {pick.map((s) => (
+        <div key={s.key}>
+          <div className="font-bold tabular-nums">{s.home}{s.key === 'possessionPct' ? '%' : ''} – {s.away}{s.key === 'possessionPct' ? '%' : ''}</div>
+          <div className="text-[11px] text-emerald-50/50">{t(`stat.${s.key}`)}</div>
+        </div>
+      ))}
+    </button>
   );
 }

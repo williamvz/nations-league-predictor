@@ -14,11 +14,31 @@ Voorspellingenpool voor de **UEFA Nations League 2026/27 (League A)** voor famil
 
 Het echte seizoen begint pas op 24 september — maar je kunt het hele systeem nú testen. Zet in de configuratie `demo_mode: true` en herstart de add-on:
 
-- Er draait een **gesimuleerd seizoen in ±1 uur**: alle 48 groepswedstrijden gaan live (met tussenstanden, doelpuntenmakers en een tikkende klok), daarna volgen automatisch de kwartfinales en de Final Four t/m de kampioen.
+- Er draait een **gesimuleerd seizoen in ±1 uur**: alle 48 groepswedstrijden gaan live (met tussenstanden, doelpuntenmakers, een tikkende klok en een compleet wedstrijdcentrum met statistieken, opstellingen, live-verslag en verslag), daarna volgen automatisch de kwartfinales en de Final Four t/m de kampioen.
 - **3 bots** doen mee zodat de ranglijst, dagwinnaars en bonusuitslagen leven. Doe zelf mee: voorspellingen invullen kan tot elke (gesimuleerde) aftrap.
 - Alles gedraagt zich als in het echt: meldingen, pushberichten, prestaties, deelknop — ideaal om ook de HA-koppeling en pushmeldingen op je telefoon te testen.
 - De demo gebruikt een **eigen database** (`nlpool-demo.db`); je echte pool blijft onaangeroerd. Bij elke herstart in demo-modus begint een vers seizoen.
 - Klaar? Zet `demo_mode: false` en herstart — de app pakt de echte database weer op. Een paarse banner in de app maakt altijd duidelijk dat je naar de demo kijkt.
+
+## 📊 Wedstrijdcentrum
+
+Tik op een wedstrijd voor alles wat er te weten valt. Terwijl je kijkt ververst het scherm elke 30 seconden.
+
+| Tabblad | Wat je ziet |
+|---|---|
+| **Overzicht** | Tijdlijn met doelpunten (en assist), kaarten, wissels en VAR-momenten; balbezit en schoten in één oogopslag; stadion, scheidsrechter, toeschouwers en eerdere onderlinge duels |
+| **Statistieken** | Balbezit, schoten (op doel), hoekschoppen, overtredingen, kaarten, buitenspel, reddingen, passes en passnauwkeurigheid, voorzetten, tackles en onderscheppingen |
+| **Opstellingen** | Formatie, basiself met rugnummers, de bank; ▲ ingevallen / ▼ gewisseld |
+| **Live-verslag** | Minuut-voor-minuut tekstverslag (van ESPN, in het Engels), nieuwste bovenaan |
+| **Verslag** | Het geschreven wedstrijdverslag, zodra dat na het laatste fluitsignaal verschijnt |
+| **Voorspellingen** | Consensus-heatmap en ieders voorspelling (pas na de aftrap) |
+
+Goed om te weten:
+- Tabbladen verschijnen alleen als er iets te tonen is. Voor kleinere duels levert ESPN niet altijd een live-verslag of een artikel.
+- **Opstellingen** komen ongeveer een uur voor de aftrap. Het **verslag** zoekt de app tot 8 uur na afloop; komt er niets, dan stopt hij daarmee.
+- Stond de Pi uit? De dagelijkse synchronisatie haalt de gegevens van gemiste wedstrijden alsnog op.
+- In **demo-modus** krijgt elke gesimuleerde wedstrijd dit allemaal ook, inclusief een Nederlandstalig verslag.
+- Zet je een uitslag handmatig terug (Beheer → Uitslagen → reset), dan worden de wedstrijdgegevens ook gewist.
 
 ## 🎇 Wedstrijddag-spektakel
 
@@ -50,7 +70,7 @@ Tip: in **demo-modus** vuren deze events ook — test je lichtshow dus gewoon va
 
 - **De Sportkrant** (*Meer → De Sportkrant*): na elke speelronde verschijnt automatisch een vlijmscherp Nederlands verslag — dagwinnaar, joker-helden en -drama's, stijgers, dalers, de stunt die niemand zag aankomen en wie er wéér vergat in te vullen. Iedereen krijgt een melding; delen naar de groepsapp kan met één tik.
 - **Kristallen Bol** (*Meer → Kristallen Bol*): persoonlijke voorspelstatistieken — trefzekerheid, exact/saldo/winnaar-verdeling, joker-rendement, "jouw klik" en "jouw blinde vlek" per land, neigingen (te veel doelpunten? te vaak thuiswinst?) en je pijnlijkste misser. Ook van je tegenstanders te bekijken. 👀
-- **Consensus-heatmap**: open een gestarte wedstrijd en zie als hittekaart wat de hele groep voorspelde — met een groene ring om de echte uitslag.
+- **Consensus-heatmap** (tabblad *Voorspellingen* in het wedstrijdcentrum): open een gestarte wedstrijd en zie als hittekaart wat de hele groep voorspelde — met een groene ring om de echte uitslag.
 - **⚡ Blitz-invullen** (*Meer → Blitz*, of de ⚡-knoppen): alle open wedstrijden als kaarten achter elkaar — duimen, opslaan, volgende. Hele speelronde ingevuld in een halve minuut.
 
 ## Aanmeldingen & goedkeuring
@@ -74,12 +94,13 @@ De add-on haalt zelf alles op — er is geen configuratie nodig:
 
 | Wanneer | Wat |
 |---|---|
-| Elke 2 min (alleen rond wedstrijden) | Live scores + tussenstanden |
+| Elke 2 min (alleen rond wedstrijden) | Live scores + tussenstanden, statistieken, tijdlijn en live-verslag |
+| Elke 20 min | Opstellingen (±1 uur voor de aftrap) en het wedstrijdverslag (tot 8 uur na afloop) |
 | Elke 20 min | Vangnet-sweep: gemiste uitslagen |
 | Dagelijks 05:30 | Speelschema (aftraptijden, uitstellingen) |
 | Bij het opstarten | Inhaalslag (voor als de Pi uit stond) |
 
-Bronnen: ESPN (primair, incl. doelpuntenmakers) met TheSportsDB als reserve. Zodra een wedstrijd afgelopen is worden de punten berekend, de ranglijst bijgewerkt en krijgt iedereen een melding. Groepswinnaar- en topscorer-bonusvragen keren zichzelf automatisch uit.
+Bronnen: ESPN (primair, incl. doelpuntenmakers, statistieken, opstellingen, live-verslag en wedstrijdverslag) met TheSportsDB als reserve voor de uitslagen. Zodra een wedstrijd afgelopen is worden de punten berekend, de ranglijst bijgewerkt en krijgt iedereen een melding. Groepswinnaar- en topscorer-bonusvragen keren zichzelf automatisch uit.
 
 Gaat er toch iets mis? In **Beheer → Status** zie je de synclog en kun je handmatig synchroniseren; onder **Uitslagen** kun je altijd handmatig een uitslag invoeren (die wordt nooit door de sync overschreven).
 

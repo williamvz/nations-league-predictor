@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import db from '../db/database.js';
 import { authenticate } from '../middleware/auth.js';
+import { getDetails } from '../sync/engine.js';
 
 const router = Router();
 
@@ -66,6 +67,8 @@ router.get('/:id', authenticate, (req, res) => {
     FROM match_events e LEFT JOIN teams t ON t.id = e.team_id
     WHERE e.match_id = ? ORDER BY e.id ASC
   `).all(match.id);
+  // stats, timeline, line-ups, commentary and recap (when the provider has them)
+  out.details = getDetails(match.id);
   // everyone's predictions become visible once the match has started
   if (out.is_locked) {
     out.all_predictions = db.prepare(`

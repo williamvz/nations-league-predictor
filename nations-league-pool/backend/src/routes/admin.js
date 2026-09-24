@@ -148,6 +148,7 @@ router.put('/matches/:id/reset', (req, res) => {
     `).run(matchId);
     db.prepare('UPDATE predictions SET points = NULL WHERE match_id = ?').run(matchId);
     db.prepare('DELETE FROM match_events WHERE match_id = ?').run(matchId);
+    db.prepare('DELETE FROM match_details WHERE match_id = ?').run(matchId);
   });
   tx();
   recomputeScorers();

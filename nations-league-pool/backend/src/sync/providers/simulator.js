@@ -7,6 +7,7 @@
 // tournament — champion bonus included — plays out in about an hour.
 import db from '../../db/database.js';
 import { computeGroupStandings } from '../../services/standings.js';
+import { simulateDetails } from './simDetails.js';
 
 export const SIM_MATCH_MINUTES = Number(process.env.SIM_MATCH_MINUTES || 4);
 
@@ -124,6 +125,10 @@ export function fetchSimulatedEvents() {
         player: g.player, teamName: g.teamName, minute: `${g.minute}'`,
         ownGoal: g.ownGoal, penalty: g.penalty,
       })),
+      details: simulateDetails({
+        match: m, home, away, goals, simMinute, homeScore, awayScore, finished, winnerName,
+        rnd: mulberry32(seedFor(m) + 2), players: PLAYERS,
+      }),
     });
   }
 
