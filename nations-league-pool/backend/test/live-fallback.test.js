@@ -123,3 +123,45 @@ test('finished match whose summary keeps failing stops being refetched after the
   await syncMatchDetails({ backfill: true, fetcher: async () => { throw new Error('down'); }, baseline: new Map([['700123', espnEvent().details]]) });
   assert.equal(db.prepare('SELECT complete FROM match_details WHERE match_id = ?').get(match.id).complete, 1);
 });
+
+test('ESPN refuses a date range (400) → falls back to one request per day', async () => {
+  const { fetchEventsForDays, _resetRangeSupport } = await import('../src/sync/providers/espn.js');
+  _resetRangeSupport();
+  const calls = [];
+  const fake = async (dates) => {
+    calls.push(dates);
+    if (dates.includes('-')) throw Object.assign(new Error('ESPN 400'), { status: 400 });
+    return [{ providerId: `e-${dates}` }, { providerId: 'shared' }];
+  };
+  const evs = await fetchEventsForDays(['20260925', '20260924', '20260924'], fake);
+  assert.deepEqual(calls, ['20260924-20260925', '20260924', '20260925']);
+  assert.deepEqual(evs.map((e) => e.providerId).sort(), ['e-20260924', 'e-20260925', 'shared']);
+
+  // remembered: the next poll skips the range attempt
+  calls.length = 0;
+  await fetchEventsForDays(['20260924', '20260925'], fake);
+  assert.deepEqual(calls, ['20260924', '20260925']);
+
+  // a single day never uses a range
+  calls.length = 0;
+  await fetchEventsForDays(['20260924'], fake);
+  assert.deepEqual(calls, ['20260924']);
+});
+
+test('per-day fallback: one bad day is skipped, all bad days throw', async () => {
+  const { fetchEventsForDays, _resetRangeSupport } = await import('../src/sync/providers/espn.js');
+  _resetRangeSupport();
+  const flaky = async (d) => {
+    if (d.includes('-')) throw Object.assign(new Error('ESPN 400'), { status: 400 });
+    if (d === '20260925') throw new Error('ESPN 500');
+    return [{ providerId: d }];
+  };
+  assert.deepEqual((await fetchEventsForDays(['20260924', '20260925'], flaky)).map((e) => e.providerId), ['20260924']);
+  const down = async () => { throw Object.assign(new Error('ESPN 400'), { status: 400 }); };
+  _resetRangeSupport();
+  await assert.rejects(fetchEventsForDays(['20260924', '20260925'], down), /ESPN 400/);
+  // non-400 range errors are real errors, not a reason to fan out
+  _resetRangeSupport();
+  const boom = async () => { throw Object.assign(new Error('ESPN 503'), { status: 503 }); };
+  await assert.rejects(fetchEventsForDays(['20260924', '20260925'], boom), /ESPN 503/);
+});
