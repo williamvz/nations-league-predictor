@@ -21,7 +21,9 @@ export default function More() {
     { to: '/sportkrant', icon: '📰', label: t('more.krant'), sub: t('more.krantSub') },
     { to: '/kristallen-bol', icon: '🔮', label: t('more.bol'), sub: t('more.bolSub') },
     { to: '/prestaties', icon: '🏅', label: t('more.ach'), sub: t('more.achSub') },
-    { to: '/tv', icon: '📺', label: t('more.tv'), sub: t('more.tvSub') },
+    // TV mode is for the big screen: no point offering it on a phone
+    // (the /#/tv URL itself keeps working, e.g. for a HA dashboard)
+    { to: '/tv', icon: '📺', label: t('more.tv'), sub: t('more.tvSub'), bigScreenOnly: true },
     { to: '/profiel', icon: '👤', label: t('more.profile'), sub: t('more.profileSub') },
   ];
   if (user?.is_admin === 1) {
@@ -37,7 +39,7 @@ export default function More() {
       <h1 className="text-2xl font-black">{t('more.title')}</h1>
       <div className="space-y-2">
         {items.map((i) => (
-          <Link key={i.to} to={i.to} className="card flex items-center gap-4 p-4 hover:bg-white/[0.04]">
+          <Link key={i.to} to={i.to} className={`card items-center gap-4 p-4 hover:bg-white/[0.04] ${i.bigScreenOnly ? 'hidden md:flex' : 'flex'}`} data-testid={`more-${i.to.slice(1)}`}>
             <span className="text-2xl">{i.icon}</span>
             <span className="flex-1">
               <span className="block font-bold">

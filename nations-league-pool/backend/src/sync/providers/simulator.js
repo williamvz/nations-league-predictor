@@ -127,7 +127,7 @@ export function fetchSimulatedEvents() {
       })),
       details: simulateDetails({
         match: m, home, away, goals, simMinute, homeScore, awayScore, finished, winnerName,
-        rnd: mulberry32(seedFor(m) + 2), players: PLAYERS,
+        rnd: mulberry32(seedFor(m) + 2), players: PLAYERS, simMatchMinutes: SIM_MATCH_MINUTES,
       }),
     });
   }

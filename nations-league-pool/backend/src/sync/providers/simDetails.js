@@ -51,7 +51,7 @@ export function squad(team, rnd, knownPlayers) {
  * @param ctx { match, home, away, goals, simMinute, homeScore, awayScore, finished, winnerName, rnd, players }
  *   goals: full storyline [{minute, player, side, penalty}] (only those <= simMinute are shown)
  */
-export function simulateDetails({ match, home, away, goals, simMinute, homeScore, awayScore, finished, winnerName, rnd, players }) {
+export function simulateDetails({ match, home, away, goals, simMinute, homeScore, awayScore, finished, winnerName, rnd, players, simMatchMinutes = 4 }) {
   const now = Math.min(simMinute, 90);
   const frac = Math.max(now, 1) / 90;
   const sides = { home, away };
@@ -160,6 +160,11 @@ export function simulateDetails({ match, home, away, goals, simMinute, homeScore
   if (finished) {
     commentary.push({ seq: seq++, minute: "90'", text: `Einde wedstrijd: ${name('home')} ${homeScore}–${awayScore} ${name('away')}.`, kind: 'period' });
   }
+  // real moment of each line in the time-compressed demo season, so the TV
+  // feed can interleave matches with different kickoffs correctly
+  const kickoffMs = new Date(match.kickoff_utc).getTime();
+  const msPerMinute = (simMatchMinutes * 60_000) / 90;
+  for (const c of commentary) c.seen = Math.round(kickoffMs + (parseInt(c.minute, 10) || 0) * msPerMinute + c.seq);
   commentary.sort((x, y) => y.seq - x.seq);
 
   // --- venue ------------------------------------------------------------------
