@@ -223,7 +223,7 @@ const BADGE = {
   injury: { icon: '🩹', cls: 'bg-white/10 text-emerald-50' },
 };
 
-function Badge({ t, kind }) {
+export function Badge({ t, kind }) {
   const b = BADGE[kind];
   if (!b) return null;
   return (

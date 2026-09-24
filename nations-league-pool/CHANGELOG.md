@@ -3,6 +3,7 @@
 ## 1.9.0
 
 - 🏷️ **Badges in het live-verslag**: elke belangrijke regel krijgt een label met icoon: ⚽ Goal, 🟨 Kaart, 🟥 Rood, ⇄ Wissel, 🧤 Redding, 🎯 Kans, 🥅 Paal/lat, ⛳ Corner, 🚩 Buitenspel, 📺 VAR, ⚠️ Strafschop, 🩹 Blessure. Aftrap, rust, einde en blessuretijd staan als grote, vette regel in het verslag, zodat je het verloop in één oogopslag ziet. Goals en rode kaarten zijn daarnaast gekleurd gemarkeerd.
+- 📺 **Gecombineerd live-verslag in TV-modus**: naast de ranglijst loopt nu één verslag van álle wedstrijden die bezig zijn (en die net afgelopen zijn), nieuwste bovenaan. Elke regel krijgt de vlag van het land dat aan zet is, plus de badge; spelen er meerdere wedstrijden tegelijk, dan staat de wedstrijd (bijv. NED–GER) erachter. Regels zonder duidelijke partij, zoals "Einde wedstrijd", krijgen beide vlaggen. Regels worden gesorteerd op het moment dat ze binnenkwamen, zodat wedstrijden met verschillende aftrap netjes door elkaar lopen.
 
 ## 1.8.1
 
