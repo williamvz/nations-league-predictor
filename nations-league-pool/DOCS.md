@@ -29,7 +29,7 @@ Tik op een wedstrijd voor alles wat er te weten valt. Terwijl je kijkt ververst 
 | **Overzicht** | Tijdlijn met doelpunten (en assist), kaarten, wissels en VAR-momenten; balbezit en schoten in één oogopslag; stadion, scheidsrechter, toeschouwers en eerdere onderlinge duels |
 | **Statistieken** | Balbezit, schoten (op doel), hoekschoppen, overtredingen, kaarten, buitenspel, reddingen, passes en passnauwkeurigheid, voorzetten, tackles en onderscheppingen |
 | **Opstellingen** | Formatie, basiself met rugnummers, de bank; ▲ ingevallen / ▼ gewisseld |
-| **Live-verslag** | Minuut-voor-minuut tekstverslag van ESPN, nieuwste bovenaan. In het Nederlands vertaald als je de app in het Nederlands gebruikt; **🇬🇧 Origineel** toont de Engelse tekst |
+| **Live-verslag** | Minuut-voor-minuut tekstverslag van ESPN, nieuwste bovenaan, met badges (⚽ Goal, 🟨 Kaart, ⇄ Wissel, 🧤 Redding, ⛳ Corner, 🚩 Buitenspel, 📺 VAR…) en aftrap/rust/einde als grote regels. In het Nederlands vertaald als je de app in het Nederlands gebruikt; **🇬🇧 Origineel** toont de Engelse tekst |
 | **Verslag** | Het geschreven wedstrijdverslag, zodra dat na het laatste fluitsignaal verschijnt |
 | **Voorspellingen** | Consensus-heatmap en ieders voorspelling (pas na de aftrap) |
 

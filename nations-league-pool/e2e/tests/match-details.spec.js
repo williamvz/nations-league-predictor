@@ -31,6 +31,9 @@ test('finished match: every tab shows its content', async ({ page, request }) =>
 
   await page.getByTestId('tab-live').click();
   await expect(page.getByTestId('commentary')).toContainText('Einde wedstrijd');
+  // every simulated match has three subs per side → WISSEL badges; kick-off/end are headlines
+  await expect(page.getByTestId('badge-substitution').first()).toContainText('Wissel');
+  await expect(page.getByTestId('commentary-headline').first()).toBeVisible();
 
   await page.getByTestId('tab-report').click();
   await expect(page.getByTestId('report')).toContainText(m.details.article.headline);
